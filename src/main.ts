@@ -5,7 +5,6 @@ import { initialize } from "@codingame/monaco-vscode-api";
 import getConfigurationServiceOverride from "@codingame/monaco-vscode-configuration-service-override";
 import getFilesServiceOverride, {
   RegisteredFileSystemProvider,
-  RegisteredMemoryFile,
   registerFileSystemOverlay,
 } from "@codingame/monaco-vscode-files-service-override";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
@@ -15,12 +14,12 @@ import TextMateWorker from "@codingame/monaco-vscode-textmate-service-override/w
 import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
 import * as monaco from "monaco-editor";
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
 import { registerAbapLanguageBasics } from "./abap-extension";
 import { ensureRoomUrl } from "./room";
+import { ensureWorkspaceDocument, RoomWorkspace } from "./room-workspace";
 
 declare global {
   interface Window {
@@ -68,9 +67,6 @@ window.MonacoEnvironment = {
 };
 
 const workspaceFileSystem = new RegisteredFileSystemProvider(false);
-workspaceFileSystem.registerFile(
-  new RegisteredMemoryFile(monaco.Uri.file("/workspace/report.abap"), ""),
-);
 registerFileSystemOverlay(1, workspaceFileSystem);
 
 await initialize({
@@ -91,9 +87,8 @@ await whenThemesReady();
 await registerAbapLanguageBasics();
 
 const editorElement = requiredElement("editor");
-const model = monaco.editor.createModel("", "abap", monaco.Uri.file("/workspace/report.abap"));
 const editor = monaco.editor.create(editorElement, {
-  model,
+  model: null,
   theme: colorThemes[colorTheme].editor,
   automaticLayout: true,
   fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', monospace",
@@ -115,14 +110,20 @@ const provider = new WebsocketProvider(
   roomId,
   ydoc,
 );
-const ytext = ydoc.getText("code");
-const binding = new MonacoBinding(ytext, model, new Set([editor]), provider.awareness);
+const connectionStatus = requiredElement("connection-status");
+provider.on("status", ({ status }: { status: string }) => {
+  connectionStatus.textContent = status === "connected" ? "Live" : "Reconnecting…";
+  connectionStatus.classList.toggle("connected", status === "connected");
+});
 let localUser = {
   name: displayName,
   color: randomItem(themeCompatibleColors()),
 };
 
 provider.awareness.setLocalStateField("user", localUser);
+await waitForInitialSync(provider);
+ensureWorkspaceDocument(ydoc);
+const roomWorkspace = new RoomWorkspace(ydoc, provider.awareness, editor, workspaceFileSystem);
 
 const nameInput = requiredInput("display-name");
 nameInput.value = displayName;
@@ -148,12 +149,6 @@ themeToggle.addEventListener("click", () => {
 });
 updateThemeToggle();
 
-const connectionStatus = requiredElement("connection-status");
-provider.on("status", ({ status }: { status: string }) => {
-  connectionStatus.textContent = status === "connected" ? "Live" : "Reconnecting…";
-  connectionStatus.classList.toggle("connected", status === "connected");
-});
-
 const cursorPosition = requiredElement("cursor-position");
 editor.onDidChangeCursorPosition(({ position }) => {
   cursorPosition.textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
@@ -175,7 +170,7 @@ requiredElement("color-picker").addEventListener("click", ({ target }) => {
 renderParticipants();
 
 window.addEventListener("beforeunload", () => {
-  binding.destroy();
+  roomWorkspace.destroy();
   provider.destroy();
   ydoc.destroy();
 });
@@ -386,6 +381,21 @@ function requiredButton(id: string): HTMLButtonElement {
     throw new Error(`#${id} is not a button`);
   }
   return element;
+}
+
+function waitForInitialSync(websocketProvider: WebsocketProvider): Promise<void> {
+  if (websocketProvider.synced) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    const handleSync = (synced: boolean): void => {
+      if (synced) {
+        websocketProvider.off("sync", handleSync);
+        resolve();
+      }
+    };
+    websocketProvider.on("sync", handleSync);
+  });
 }
 
 let toastTimer: number | undefined;

@@ -230,16 +230,192 @@ button {
   font-weight: 700;
 }
 
+.explorer-title {
+  padding-right: 4px;
+}
+
+.explorer-actions {
+  display: flex;
+  margin-left: auto;
+}
+
+.explorer-action {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  place-items: center;
+}
+
+.explorer-action:hover {
+  background: var(--button-hover);
+}
+
+.explorer-menu {
+  position: fixed;
+  z-index: 80;
+  width: 200px;
+  padding: 4px;
+  border: 1px solid var(--button-border);
+  border-radius: 4px;
+  background: var(--toast-background);
+  box-shadow: 0 5px 18px var(--shadow);
+}
+
+.explorer-menu[hidden] {
+  display: none;
+}
+
+.explorer-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  text-align: left;
+}
+
+.explorer-menu button:hover:not(:disabled),
+.explorer-menu button:focus-visible {
+  outline: none;
+  background: var(--accent);
+  color: white;
+}
+
+.explorer-menu button:disabled {
+  color: var(--faint-foreground);
+}
+
+.explorer-menu kbd {
+  color: inherit;
+  font: inherit;
+  opacity: 0.72;
+}
+
+.menu-separator {
+  display: block;
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border);
+}
+
+.codicon {
+  font: normal normal normal 16px/1 codicon;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+.codicon-new-file::before {
+  content: "\ea7f";
+}
+
+.codicon-new-folder::before {
+  content: "\ea80";
+}
+
+.codicon-more::before {
+  content: "\ea7c";
+}
+
+.explorer-tree {
+  min-height: 23px;
+  outline: none;
+}
+
 .file-row {
   display: flex;
   align-items: center;
   width: 100%;
   height: 23px;
-  gap: 7px;
-  padding: 0 12px 0 22px;
+  gap: 5px;
+  padding: 0 8px;
   border: 0;
-  background: var(--selected-background);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
   text-align: left;
+  user-select: none;
+}
+
+.file-row:hover {
+  background: var(--button-hover);
+}
+
+.file-row.selected {
+  background: var(--selected-background);
+}
+
+.file-row.active .file-row-label {
+  color: var(--active-foreground);
+}
+
+.file-row:focus-visible {
+  outline: 1px solid var(--focus-border);
+  outline-offset: -1px;
+}
+
+.file-row.cut {
+  opacity: 0.55;
+}
+
+.file-row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-chevron {
+  width: 12px;
+  flex: 0 0 12px;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.folder-icon,
+.generic-file-icon {
+  display: inline-grid;
+  width: 15px;
+  flex: 0 0 15px;
+  place-items: center;
+  color: var(--muted-foreground);
+}
+
+.create-row {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  gap: 5px;
+  padding-right: 8px;
+}
+
+.create-input {
+  min-width: 0;
+  height: 22px;
+  flex: 1;
+  padding: 1px 4px;
+  border: 1px solid var(--focus-border);
+  outline: none;
+  background: var(--input-background);
+  color: var(--foreground);
+}
+
+.create-input.invalid {
+  border-color: #f14c4c;
+}
+
+.rename-input {
+  margin-right: 2px;
 }
 
 .presence-section {
@@ -362,12 +538,6 @@ button {
 
 .editor-tab.active {
   border-top: 1px solid #0078d4;
-}
-
-.tab-close {
-  margin-left: auto;
-  color: var(--muted-foreground);
-  font-size: 16px;
 }
 
 .breadcrumbs {

@@ -19,7 +19,7 @@
     <div id="app">
       <header class="titlebar">
         <div class="window-mark" aria-hidden="true">A</div>
-        <span class="titlebar-label">report.abap — ABAP Collaborate</span>
+        <span id="titlebar-label" class="titlebar-label">report.abap — ABAP Collaborate</span>
         <div class="titlebar-actions">
           <span id="connection-status" class="connection-status">Connecting…</span>
           <button
@@ -45,11 +45,40 @@
         <aside class="sidebar">
           <div class="sidebar-heading">EXPLORER</div>
           <section class="explorer-section">
-            <div class="section-title"><span>⌄</span> ABAP ROOM</div>
-            <button class="file-row active" type="button">
-              <span class="abap-file-icon">A</span>
-              <span>report.abap</span>
-            </button>
+            <div class="section-title explorer-title">
+              <span>⌄</span>
+              <span>ABAP ROOM</span>
+              <span class="explorer-actions">
+                <button id="new-file" class="explorer-action" type="button" aria-label="New file" title="New File">
+                  <span class="codicon codicon-new-file" aria-hidden="true"></span>
+                </button>
+                <button id="new-folder" class="explorer-action" type="button" aria-label="New folder" title="New Folder">
+                  <span class="codicon codicon-new-folder" aria-hidden="true"></span>
+                </button>
+                <button
+                  id="explorer-menu-button"
+                  class="explorer-action explorer-menu-button"
+                  type="button"
+                  aria-label="More Explorer actions"
+                  aria-haspopup="menu"
+                  title="More Actions"
+                >
+                  <span class="codicon codicon-more" aria-hidden="true"></span>
+                </button>
+              </span>
+            </div>
+            <div id="explorer-tree" class="explorer-tree" role="tree" aria-label="Room files" tabindex="0"></div>
+            <div id="explorer-menu" class="explorer-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-command="new-file"><span>New File</span><kbd>Ctrl+N</kbd></button>
+              <button type="button" role="menuitem" data-command="new-folder"><span>New Folder</span></button>
+              <span class="menu-separator" role="separator"></span>
+              <button type="button" role="menuitem" data-command="rename"><span>Rename</span><kbd>F2</kbd></button>
+              <button type="button" role="menuitem" data-command="cut"><span>Cut</span><kbd>Ctrl+X</kbd></button>
+              <button type="button" role="menuitem" data-command="copy"><span>Copy</span><kbd>Ctrl+C</kbd></button>
+              <button type="button" role="menuitem" data-command="paste"><span>Paste</span><kbd>Ctrl+V</kbd></button>
+              <span class="menu-separator" role="separator"></span>
+              <button type="button" role="menuitem" data-command="delete"><span>Delete</span><kbd>Delete</kbd></button>
+            </div>
           </section>
           <section class="presence-section">
             <div class="section-title"><span>⌄</span> PARTICIPANTS</div>
@@ -72,13 +101,12 @@
 
         <section class="editor-area">
           <div class="tabbar">
-            <div class="editor-tab active">
-              <span class="abap-file-icon">A</span>
-              <span>report.abap</span>
-              <span class="tab-close">×</span>
+            <div id="editor-tab" class="editor-tab active">
+              <span id="tab-file-icon" class="abap-file-icon">A</span>
+              <span id="tab-file-name">report.abap</span>
             </div>
           </div>
-          <div class="breadcrumbs"><span>ABAP ROOM</span><span>›</span><span>report.abap</span></div>
+          <div id="breadcrumbs" class="breadcrumbs"><span>ABAP ROOM</span><span>›</span><span>report.abap</span></div>
           <div id="editor" class="editor" aria-label="Collaborative ABAP editor"></div>
         </section>
       </main>

@@ -52,9 +52,11 @@ export class CollaborationRoom {
       if (persistedUpdate !== undefined) {
         Y.applyUpdate(this.document, new Uint8Array(persistedUpdate), "storage");
       }
-      const code = this.document.getText("code");
-      if (code.length === 0) {
-        code.insert(0, defaultAbapSource);
+      const files = this.document.getMap("files");
+      if (files.size === 0) {
+        const legacyCode = this.document.getText("code");
+        const report = new Y.Text(legacyCode.length === 0 ? defaultAbapSource : legacyCode.toString());
+        files.set("report.abap", report);
         await this.persistDocument();
       }
       this.document.on("update", (update, origin) => {

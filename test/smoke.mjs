@@ -18,8 +18,10 @@ const secondProvider = createProvider(secondDocument);
 
 try {
   await Promise.all([waitForSync(firstProvider), waitForSync(secondProvider)]);
-  const firstText = firstDocument.getText("code");
-  const secondText = secondDocument.getText("code");
+  const firstText = firstDocument.getMap("files").get("report.abap");
+  const secondText = secondDocument.getMap("files").get("report.abap");
+  assert.ok(firstText instanceof Y.Text);
+  assert.ok(secondText instanceof Y.Text);
   assert.match(firstText.toString(), /REPORT zcollaborative_demo\./);
   const marker = `\nWRITE / 'Smoke ${room}'.\n`;
   firstText.insert(firstText.length, marker);

@@ -22,7 +22,10 @@ test("synchronizes and restores ABAP edits through a durable room", async () => 
   try {
     await synchronize(room, firstSocket, firstDocument);
     await synchronize(room, secondSocket, secondDocument);
-    const firstText = firstDocument.getText("code");
+    const firstFiles = firstDocument.getMap("files");
+    const secondFiles = secondDocument.getMap("files");
+    const firstText = firstFiles.get("report.abap");
+    assert.ok(firstText instanceof Y.Text);
     assert.match(firstText.toString(), /REPORT zcollaborative_demo\./);
 
     let update;
@@ -32,7 +35,22 @@ test("synchronizes and restores ABAP edits through a durable room", async () => 
     firstText.insert(firstText.length, "\nWRITE / 'Persistent'.\n");
     await room.webSocketMessage(firstSocket, encodeSyncUpdate(update));
     applySyncMessages(secondSocket, secondDocument);
-    assert.equal(secondDocument.getText("code").toString(), firstText.toString());
+    const secondText = secondFiles.get("report.abap");
+    assert.ok(secondText instanceof Y.Text);
+    assert.equal(secondText.toString(), firstText.toString());
+
+    let structureUpdate;
+    firstDocument.once("update", (nextUpdate) => {
+      structureUpdate = nextUpdate;
+    });
+    firstDocument.transact(() => {
+      firstDocument.getMap("folders").set("includes", true);
+      firstFiles.set("includes/helper.abap", new Y.Text("FORM helper.\nENDFORM.\n"));
+    });
+    await room.webSocketMessage(firstSocket, encodeSyncUpdate(structureUpdate));
+    applySyncMessages(secondSocket, secondDocument);
+    assert.equal(secondDocument.getMap("folders").get("includes"), true);
+    assert.equal(secondFiles.get("includes/helper.abap")?.toString(), "FORM helper.\nENDFORM.\n");
 
     room.awareness.destroy();
     room.document.destroy();
@@ -44,9 +62,12 @@ test("synchronizes and restores ABAP edits through a durable room", async () => 
     restoredContext.sockets.push(restoredSocket);
     try {
       await synchronize(restoredRoom, restoredSocket, restoredDocument);
-      const restoredCode = restoredDocument.getText("code").toString();
+      const restoredFiles = restoredDocument.getMap("files");
+      const restoredCode = restoredFiles.get("report.abap")?.toString();
       assert.equal(restoredCode.match(/REPORT zcollaborative_demo\./g)?.length, 1);
       assert.match(restoredCode, /WRITE \/ 'Persistent'\./);
+      assert.equal(restoredDocument.getMap("folders").get("includes"), true);
+      assert.equal(restoredFiles.get("includes/helper.abap")?.toString(), "FORM helper.\nENDFORM.\n");
     } finally {
       restoredRoom.awareness.destroy();
       restoredRoom.document.destroy();
@@ -57,6 +78,26 @@ test("synchronizes and restores ABAP edits through a durable room", async () => 
     room.document.destroy();
     firstDocument.destroy();
     secondDocument.destroy();
+  }
+});
+
+test("migrates the single-file room document into the shared workspace", async () => {
+  const legacyDocument = new Y.Doc();
+  legacyDocument.getText("code").insert(0, "REPORT zlegacy_room.\n");
+  const storage = new MemoryStorage();
+  await storage.put("document", Y.encodeStateAsUpdate(legacyDocument));
+  legacyDocument.destroy();
+
+  const context = new FakeContext(storage);
+  const room = new CollaborationRoom(context);
+  await room.ready;
+  try {
+    const report = room.document.getMap("files").get("report.abap");
+    assert.ok(report instanceof Y.Text);
+    assert.equal(report.toString(), "REPORT zlegacy_room.\n");
+  } finally {
+    room.awareness.destroy();
+    room.document.destroy();
   }
 });
 

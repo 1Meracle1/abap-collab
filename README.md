@@ -2,8 +2,13 @@
 
 ABAP Collaborate is the browser MVP for sharing and editing ABAP code in a
 VS Code-style interface. Opening `/` creates a room URL. Anyone opening that
-URL joins the same Yjs document and can see live participants, selections, and
-edits.
+URL joins the same Yjs workspace and can see live participants, selections,
+files, folders, and edits. The Explorer creates and manages shared files and
+nested folders. Its action menu and common keyboard shortcuts support
+multi-selection, rename, copy, cut/move, paste, and recursive deletion.
+Rooms created by the earlier single-file client are migrated to `report.abap`
+by either the Worker or the browser, so a frontend deployment does not require
+an exactly simultaneous Worker restart.
 
 The ABAP language registration is not a copied browser grammar. The build uses
 a pinned release of `1Meracle1/abap-language-basics`, keeping the browser and
@@ -38,7 +43,10 @@ production. Room documents are stored in local Wrangler state while developing.
   configuration, file, and snippet services.
 - `src/abap-extension.ts` registers `abap-language-basics` as a declarative
   browser extension and maps its contributed files into the extension host.
-- `y-monaco` binds the editor model to a Yjs text document.
+- `src/room-workspace.ts` owns the collaborative file tree, Explorer UI, Monaco
+  models, and the active `y-monaco` binding.
+- Yjs maps store room file paths, folder paths, and one shared text type per
+  file.
 - `worker/index.js` routes room WebSockets to one Durable Object per room and
   persists each Yjs document in Durable Object storage.
 - Cloudflare's WebSocket Hibernation API keeps idle room connections open
