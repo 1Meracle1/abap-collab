@@ -26,12 +26,11 @@ Useful commands:
 ```sh
 npm run build    # type-check and create dist/
 npm test         # two-client WebSocket synchronization test
-npm run preview  # serve the production bundle
+npm run preview  # preview the Worker and production bundle
 ```
 
-Room updates are stored in `.data/` with LevelDB. The directory is local
-runtime state and is ignored by Git. Set `DATA_DIRECTORY` to store them in a
-different location.
+Local development runs the same Worker and Durable Object architecture used in
+production. Room documents are stored in local Wrangler state while developing.
 
 ## Architecture
 
@@ -40,8 +39,10 @@ different location.
 - `src/abap-extension.ts` registers `abap-language-basics` as a declarative
   browser extension and maps its contributed files into the extension host.
 - `y-monaco` binds the editor model to a Yjs text document.
-- `server.mjs` serves Vite or the production bundle, initializes rooms before
-  completing the WebSocket handshake, and persists Yjs updates to LevelDB.
+- `worker/index.js` routes room WebSockets to one Durable Object per room and
+  persists each Yjs document in Durable Object storage.
+- Cloudflare's WebSocket Hibernation API keeps idle room connections open
+  without keeping a Worker instance active.
 - Yjs awareness carries participant names, colors, cursors, and selections.
 
 ## MVP Boundary
@@ -55,20 +56,19 @@ not yet connect the Odin `abap_language_server`; diagnostics, navigation,
 semantic tokens, and context-aware completion require a WebSocket-to-stdio LSP
 gateway in the next milestone.
 
-## Deploy to Azure App Service
+## Deploy to Cloudflare
 
-Create a Linux Node.js App Service and deploy this repository with build
-automation enabled. Configure these application settings:
+Authenticate Wrangler once and deploy the Worker, Durable Object, and static
+assets together:
 
-```text
-NODE_ENV=production
-DATA_DIRECTORY=/home/data
+```sh
+npx wrangler login
+npm run deploy
 ```
 
-The server reads Azure's `PORT`, binds all interfaces in production, and
-flushes pending persistence writes during normal process shutdown. Keep the
-App Service at one instance while it uses LevelDB.
+The `v1` migration creates the SQLite-backed `CollaborationRoom` Durable Object
+class. The Worker routes `/collaboration/<room-id>` before static assets and
+serves all other paths from `dist/`, including SPA room URLs.
 
-The current deployment is intentionally an anonymous public preview. Anyone
-with a room URL can read and edit that room. Do not use it for sensitive ABAP
-source.
+The deployment is intentionally an anonymous public preview. Anyone with a room
+URL can read and edit that room. Do not use it for sensitive ABAP source.
