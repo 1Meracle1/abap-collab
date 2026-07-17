@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#181818" />
+    <title>ABAP Collaborate</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="titlebar">
+        <div class="window-mark" aria-hidden="true">A</div>
+        <span class="titlebar-label">report.abap — ABAP Collaborate</span>
+        <div class="titlebar-actions">
+          <span id="connection-status" class="connection-status">Connecting…</span>
+          <button id="new-room" class="quiet-button" type="button">New room</button>
+          <button id="share-room" class="share-button" type="button">Share room</button>
+        </div>
+      </header>
+
+      <main class="workbench">
+        <nav class="activitybar" aria-label="Activity bar">
+          <button class="activity-item active" type="button" aria-label="Explorer">▱</button>
+          <button class="activity-item" type="button" aria-label="Search">⌕</button>
+          <button class="activity-item" type="button" aria-label="Source control">⑂</button>
+          <div class="activity-spacer"></div>
+          <button class="activity-item" type="button" aria-label="Settings">⚙</button>
+        </nav>
+
+        <aside class="sidebar">
+          <div class="sidebar-heading">EXPLORER</div>
+          <section class="explorer-section">
+            <div class="section-title"><span>⌄</span> ABAP ROOM</div>
+            <button class="file-row active" type="button">
+              <span class="abap-file-icon">A</span>
+              <span>report.abap</span>
+            </button>
+          </section>
+          <section class="presence-section">
+            <div class="section-title"><span>⌄</span> PARTICIPANTS</div>
+            <label class="name-label" for="display-name">Your name</label>
+            <input id="display-name" class="name-input" maxlength="32" autocomplete="off" />
+            <div class="color-heading">
+              <span>Your color</span>
+              <span id="color-help" class="color-help">Used colors are unavailable</span>
+            </div>
+            <div
+              id="color-picker"
+              class="color-picker"
+              role="radiogroup"
+              aria-label="Your collaboration color"
+              aria-describedby="color-help"
+            ></div>
+            <div id="participants" class="participants" aria-live="polite"></div>
+          </section>
+        </aside>
+
+        <section class="editor-area">
+          <div class="tabbar">
+            <div class="editor-tab active">
+              <span class="abap-file-icon">A</span>
+              <span>report.abap</span>
+              <span class="tab-close">×</span>
+            </div>
+          </div>
+          <div class="breadcrumbs"><span>ABAP ROOM</span><span>›</span><span>report.abap</span></div>
+          <div id="editor" class="editor" aria-label="Collaborative ABAP editor"></div>
+        </section>
+      </main>
+
+      <footer class="statusbar">
+        <span class="status-remote">⑂</span>
+        <span id="room-label">Room</span>
+        <span class="status-spacer"></span>
+        <span id="cursor-position">Ln 1, Col 1</span>
+        <span>Spaces: 2</span>
+        <span>UTF-8</span>
+        <span>ABAP</span>
+      </footer>
+    </div>
+    <div id="toast" class="toast" role="status"></div>
+    <style id="presence-styles"></style>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

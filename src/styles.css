@@ -1,0 +1,433 @@
+:root {
+  color: #cccccc;
+  background: #181818;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: 35px minmax(0, 1fr) 23px;
+  background: #181818;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 8px;
+  border-bottom: 1px solid #2b2b2b;
+  background: #181818;
+  font-size: 12px;
+  user-select: none;
+}
+
+.window-mark,
+.abap-file-icon {
+  display: inline-grid;
+  place-items: center;
+  color: #f0ab3d;
+  font-weight: 700;
+}
+
+.window-mark {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #795722;
+  border-radius: 4px;
+  background: #302718;
+}
+
+.titlebar-label {
+  position: absolute;
+  left: 50%;
+  max-width: 40%;
+  overflow: hidden;
+  transform: translateX(-50%);
+  color: #b9b9b9;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.connection-status {
+  color: #d7ba7d;
+}
+
+.connection-status.connected {
+  color: #89d185;
+}
+
+.quiet-button,
+.share-button {
+  height: 25px;
+  padding: 0 10px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.quiet-button {
+  border: 1px solid #444;
+  background: #242424;
+}
+
+.share-button {
+  border: 1px solid #0e639c;
+  background: #0e639c;
+  color: white;
+}
+
+.quiet-button:hover {
+  background: #303030;
+}
+
+.share-button:hover {
+  background: #1177bb;
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: 48px 230px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.activitybar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-right: 1px solid #2b2b2b;
+  background: #181818;
+}
+
+.activity-item {
+  position: relative;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  color: #868686;
+  font-size: 25px;
+  cursor: default;
+}
+
+.activity-item.active {
+  color: #eeeeee;
+}
+
+.activity-item.active::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: #0078d4;
+  content: "";
+}
+
+.activity-spacer {
+  flex: 1;
+}
+
+.sidebar {
+  min-width: 0;
+  border-right: 1px solid #2b2b2b;
+  background: #181818;
+  font-size: 12px;
+}
+
+.sidebar-heading {
+  height: 35px;
+  padding: 11px 20px 0;
+  color: #bbbbbb;
+  font-size: 11px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border-top: 1px solid #2b2b2b;
+  color: #cccccc;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 23px;
+  gap: 7px;
+  padding: 0 12px 0 22px;
+  border: 0;
+  background: #37373d;
+  text-align: left;
+}
+
+.presence-section {
+  margin-top: 14px;
+}
+
+.name-label {
+  display: block;
+  margin: 10px 12px 4px;
+  color: #9d9d9d;
+}
+
+.name-input {
+  width: calc(100% - 24px);
+  height: 26px;
+  margin: 0 12px 9px;
+  padding: 2px 7px;
+  border: 1px solid #3c3c3c;
+  outline: none;
+  background: #242424;
+  color: #cccccc;
+}
+
+.name-input:focus {
+  border-color: #007fd4;
+}
+
+.color-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 1px 12px 6px;
+  color: #9d9d9d;
+}
+
+.color-help {
+  color: #777;
+  font-size: 9px;
+}
+
+.color-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 18px);
+  gap: 6px;
+  margin: 0 12px 10px;
+}
+
+.color-swatch {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid #ffffff40;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.color-swatch[aria-checked="true"]::after {
+  position: absolute;
+  inset: 3px;
+  border: 2px solid #181818;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px white;
+  content: "";
+}
+
+.color-swatch:focus-visible {
+  outline: 2px solid #007fd4;
+  outline-offset: 2px;
+}
+
+.color-swatch:disabled {
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.22;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 25px;
+  padding: 0 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.participant-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.editor-area {
+  display: grid;
+  grid-template-rows: 35px 22px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: #1f1f1f;
+}
+
+.tabbar {
+  border-bottom: 1px solid #2b2b2b;
+  background: #181818;
+}
+
+.editor-tab {
+  display: flex;
+  align-items: center;
+  width: 165px;
+  height: 35px;
+  gap: 7px;
+  padding: 0 10px;
+  border-right: 1px solid #2b2b2b;
+  background: #1f1f1f;
+  font-size: 12px;
+}
+
+.editor-tab.active {
+  border-top: 1px solid #0078d4;
+}
+
+.tab-close {
+  margin-left: auto;
+  color: #999;
+  font-size: 16px;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  color: #9d9d9d;
+  font-size: 12px;
+}
+
+.editor {
+  min-width: 0;
+  min-height: 0;
+}
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 10px;
+  background: #181818;
+  color: #cccccc;
+  font-size: 12px;
+  user-select: none;
+}
+
+.status-remote {
+  display: grid;
+  width: 48px;
+  height: 100%;
+  place-items: center;
+  background: #0078d4;
+  color: white;
+}
+
+.status-spacer {
+  flex: 1;
+}
+
+.toast {
+  position: fixed;
+  z-index: 100;
+  right: 18px;
+  bottom: 40px;
+  padding: 9px 13px;
+  border: 1px solid #454545;
+  border-radius: 3px;
+  background: #252526;
+  box-shadow: 0 4px 18px #0009;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.yRemoteSelection {
+  border-radius: 2px;
+}
+
+.yRemoteSelectionHead {
+  position: relative;
+  border-left: 2px solid transparent;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.yRemoteSelectionHead::after {
+  position: absolute;
+  z-index: 20;
+  bottom: 100%;
+  left: -2px;
+  max-width: 180px;
+  overflow: hidden;
+  padding: 1px 5px;
+  border-radius: 3px 3px 3px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 16px;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .workbench {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .titlebar-label {
+    display: none;
+  }
+
+  .activity-item {
+    height: 43px;
+  }
+
+  .statusbar > span:nth-last-child(2),
+  .statusbar > span:nth-last-child(3) {
+    display: none;
+  }
+}
