@@ -1,8 +1,58 @@
 :root {
-  color: #cccccc;
-  background: #181818;
+  --accent: #0078d4;
+  --app-background: #181818;
+  --editor-background: #1e1e1e;
+  --border: #2b2b2b;
+  --foreground: #cccccc;
+  --muted-foreground: #9d9d9d;
+  --faint-foreground: #777777;
+  --button-background: #242424;
+  --button-hover: #303030;
+  --button-border: #444444;
+  --focus-border: #007fd4;
+  --input-background: #242424;
+  --input-border: #3c3c3c;
+  --selected-background: #37373d;
+  --active-foreground: #eeeeee;
+  --activity-foreground: #868686;
+  --abap-icon-foreground: #f0ab3d;
+  --abap-icon-background: #302718;
+  --abap-icon-border: #795722;
+  --pending-foreground: #d7ba7d;
+  --connected-foreground: #89d185;
+  --toast-background: #252526;
+  --shadow: #00000099;
+  color-scheme: dark;
+  color: var(--foreground);
+  background: var(--app-background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
+}
+
+:root[data-theme="light"] {
+  --app-background: #f3f3f3;
+  --editor-background: #ffffff;
+  --border: #d4d4d4;
+  --foreground: #333333;
+  --muted-foreground: #6f6f6f;
+  --faint-foreground: #767676;
+  --button-background: #ffffff;
+  --button-hover: #e8e8e8;
+  --button-border: #cecece;
+  --focus-border: #0078d4;
+  --input-background: #ffffff;
+  --input-border: #cecece;
+  --selected-background: #e4e6f1;
+  --active-foreground: #1f1f1f;
+  --activity-foreground: #6f6f6f;
+  --abap-icon-foreground: #8a4b08;
+  --abap-icon-background: #fff4ce;
+  --abap-icon-border: #c59b45;
+  --pending-foreground: #795e26;
+  --connected-foreground: #16825d;
+  --toast-background: #f3f3f3;
+  --shadow: #00000033;
+  color-scheme: light;
 }
 
 * {
@@ -30,7 +80,7 @@ button {
 #app {
   display: grid;
   grid-template-rows: 35px minmax(0, 1fr) 23px;
-  background: #181818;
+  background: var(--app-background);
 }
 
 .titlebar {
@@ -39,8 +89,8 @@ button {
   gap: 10px;
   min-width: 0;
   padding: 0 8px;
-  border-bottom: 1px solid #2b2b2b;
-  background: #181818;
+  border-bottom: 1px solid var(--border);
+  background: var(--app-background);
   font-size: 12px;
   user-select: none;
 }
@@ -49,16 +99,16 @@ button {
 .abap-file-icon {
   display: inline-grid;
   place-items: center;
-  color: #f0ab3d;
+  color: var(--abap-icon-foreground);
   font-weight: 700;
 }
 
 .window-mark {
   width: 20px;
   height: 20px;
-  border: 1px solid #795722;
+  border: 1px solid var(--abap-icon-border);
   border-radius: 4px;
-  background: #302718;
+  background: var(--abap-icon-background);
 }
 
 .titlebar-label {
@@ -67,7 +117,7 @@ button {
   max-width: 40%;
   overflow: hidden;
   transform: translateX(-50%);
-  color: #b9b9b9;
+  color: var(--muted-foreground);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -80,11 +130,11 @@ button {
 }
 
 .connection-status {
-  color: #d7ba7d;
+  color: var(--pending-foreground);
 }
 
 .connection-status.connected {
-  color: #89d185;
+  color: var(--connected-foreground);
 }
 
 .quiet-button,
@@ -96,8 +146,8 @@ button {
 }
 
 .quiet-button {
-  border: 1px solid #444;
-  background: #242424;
+  border: 1px solid var(--button-border);
+  background: var(--button-background);
 }
 
 .share-button {
@@ -107,7 +157,7 @@ button {
 }
 
 .quiet-button:hover {
-  background: #303030;
+  background: var(--button-hover);
 }
 
 .share-button:hover {
@@ -124,8 +174,8 @@ button {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  border-right: 1px solid #2b2b2b;
-  background: #181818;
+  border-right: 1px solid var(--border);
+  background: var(--app-background);
 }
 
 .activity-item {
@@ -133,20 +183,20 @@ button {
   height: 48px;
   border: 0;
   background: transparent;
-  color: #868686;
+  color: var(--activity-foreground);
   font-size: 25px;
   cursor: default;
 }
 
 .activity-item.active {
-  color: #eeeeee;
+  color: var(--active-foreground);
 }
 
 .activity-item.active::before {
   position: absolute;
   inset: 0 auto 0 0;
   width: 2px;
-  background: #0078d4;
+  background: var(--accent);
   content: "";
 }
 
@@ -156,15 +206,15 @@ button {
 
 .sidebar {
   min-width: 0;
-  border-right: 1px solid #2b2b2b;
-  background: #181818;
+  border-right: 1px solid var(--border);
+  background: var(--app-background);
   font-size: 12px;
 }
 
 .sidebar-heading {
   height: 35px;
   padding: 11px 20px 0;
-  color: #bbbbbb;
+  color: var(--muted-foreground);
   font-size: 11px;
 }
 
@@ -174,8 +224,8 @@ button {
   gap: 4px;
   height: 24px;
   padding: 0 8px;
-  border-top: 1px solid #2b2b2b;
-  color: #cccccc;
+  border-top: 1px solid var(--border);
+  color: var(--foreground);
   font-size: 11px;
   font-weight: 700;
 }
@@ -188,7 +238,7 @@ button {
   gap: 7px;
   padding: 0 12px 0 22px;
   border: 0;
-  background: #37373d;
+  background: var(--selected-background);
   text-align: left;
 }
 
@@ -199,7 +249,7 @@ button {
 .name-label {
   display: block;
   margin: 10px 12px 4px;
-  color: #9d9d9d;
+  color: var(--muted-foreground);
 }
 
 .name-input {
@@ -207,14 +257,14 @@ button {
   height: 26px;
   margin: 0 12px 9px;
   padding: 2px 7px;
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--input-border);
   outline: none;
-  background: #242424;
-  color: #cccccc;
+  background: var(--input-background);
+  color: var(--foreground);
 }
 
 .name-input:focus {
-  border-color: #007fd4;
+  border-color: var(--focus-border);
 }
 
 .color-heading {
@@ -222,11 +272,11 @@ button {
   align-items: baseline;
   justify-content: space-between;
   margin: 1px 12px 6px;
-  color: #9d9d9d;
+  color: var(--muted-foreground);
 }
 
 .color-help {
-  color: #777;
+  color: var(--faint-foreground);
   font-size: 9px;
 }
 
@@ -250,14 +300,14 @@ button {
 .color-swatch[aria-checked="true"]::after {
   position: absolute;
   inset: 3px;
-  border: 2px solid #181818;
+  border: 2px solid var(--app-background);
   border-radius: 50%;
   box-shadow: 0 0 0 1px white;
   content: "";
 }
 
 .color-swatch:focus-visible {
-  outline: 2px solid #007fd4;
+  outline: 2px solid var(--focus-border);
   outline-offset: 2px;
 }
 
@@ -290,12 +340,12 @@ button {
   grid-template-rows: 35px 22px minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
-  background: #1f1f1f;
+  background: var(--editor-background);
 }
 
 .tabbar {
-  border-bottom: 1px solid #2b2b2b;
-  background: #181818;
+  border-bottom: 1px solid var(--border);
+  background: var(--app-background);
 }
 
 .editor-tab {
@@ -305,8 +355,8 @@ button {
   height: 35px;
   gap: 7px;
   padding: 0 10px;
-  border-right: 1px solid #2b2b2b;
-  background: #1f1f1f;
+  border-right: 1px solid var(--border);
+  background: var(--editor-background);
   font-size: 12px;
 }
 
@@ -316,7 +366,7 @@ button {
 
 .tab-close {
   margin-left: auto;
-  color: #999;
+  color: var(--muted-foreground);
   font-size: 16px;
 }
 
@@ -325,7 +375,7 @@ button {
   align-items: center;
   gap: 7px;
   padding: 0 13px;
-  color: #9d9d9d;
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
@@ -339,8 +389,8 @@ button {
   align-items: center;
   gap: 14px;
   padding-right: 10px;
-  background: #181818;
-  color: #cccccc;
+  background: var(--app-background);
+  color: var(--foreground);
   font-size: 12px;
   user-select: none;
 }
@@ -364,10 +414,10 @@ button {
   right: 18px;
   bottom: 40px;
   padding: 9px 13px;
-  border: 1px solid #454545;
+  border: 1px solid var(--button-border);
   border-radius: 3px;
-  background: #252526;
-  box-shadow: 0 4px 18px #0009;
+  background: var(--toast-background);
+  box-shadow: 0 4px 18px var(--shadow);
   opacity: 0;
   pointer-events: none;
   transform: translateY(6px);

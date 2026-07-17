@@ -37,6 +37,28 @@ const participantColors = [
   "#1565c0", "#6a1b9a", "#9c3d10", "#006064", "#283593", "#7b1fa2",
   "#37474f", "#a31515", "#005a9e", "#5b5fc7", "#8e562e", "#006b5f",
 ];
+type ColorTheme = "dark" | "light";
+
+const colorThemes: Record<ColorTheme, {
+  editor: string;
+  label: string;
+  icon: string;
+  metaColor: string;
+}> = {
+  dark: {
+    editor: "Visual Studio Dark",
+    label: "Switch to light theme",
+    icon: "☀",
+    metaColor: "#181818",
+  },
+  light: {
+    editor: "Visual Studio Light",
+    label: "Switch to dark theme",
+    icon: "☾",
+    metaColor: "#f3f3f3",
+  },
+};
+let colorTheme = readColorTheme();
 const roomId = ensureRoomUrl(window.location, window.history);
 const storedName = localStorage.getItem("abap-collab.display-name");
 const displayName = storedName ?? `Guest ${Math.floor(10 + Math.random() * 90)}`;
@@ -72,7 +94,7 @@ const editorElement = requiredElement("editor");
 const model = monaco.editor.createModel("", "abap", monaco.Uri.file("/workspace/report.abap"));
 const editor = monaco.editor.create(editorElement, {
   model,
-  theme: "Dark Modern",
+  theme: colorThemes[colorTheme].editor,
   automaticLayout: true,
   fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', monospace",
   fontSize: 14,
@@ -120,6 +142,11 @@ requiredElement("share-room").addEventListener("click", async () => {
 requiredElement("new-room").addEventListener("click", () => {
   window.location.assign("/");
 });
+const themeToggle = requiredButton("theme-toggle");
+themeToggle.addEventListener("click", () => {
+  applyColorTheme(colorTheme === "dark" ? "light" : "dark");
+});
+updateThemeToggle();
 
 const connectionStatus = requiredElement("connection-status");
 provider.on("status", ({ status }: { status: string }) => {
@@ -206,6 +233,29 @@ function renderParticipants(): void {
   }
 
   presenceStyles.textContent = styles.join("\n");
+}
+
+function applyColorTheme(theme: ColorTheme): void {
+  colorTheme = theme;
+  localStorage.setItem("abap-collab.theme", theme);
+  document.documentElement.dataset.theme = theme;
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!.content =
+    colorThemes[theme].metaColor;
+  monaco.editor.setTheme(colorThemes[theme].editor);
+  updateThemeToggle();
+  updatePresence();
+}
+
+function updateThemeToggle(): void {
+  const theme = colorThemes[colorTheme];
+  themeToggle.textContent = `${theme.icon} ${colorTheme === "dark" ? "Light" : "Dark"}`;
+  themeToggle.setAttribute("aria-label", theme.label);
+  themeToggle.title = theme.label;
+}
+
+function readColorTheme(): ColorTheme {
+  const theme = document.documentElement.dataset.theme;
+  return theme === "light" ? "light" : "dark";
 }
 
 function updatePresence(): void {
@@ -326,6 +376,14 @@ function requiredInput(id: string): HTMLInputElement {
   const element = requiredElement(id);
   if (!(element instanceof HTMLInputElement)) {
     throw new Error(`#${id} is not an input`);
+  }
+  return element;
+}
+
+function requiredButton(id: string): HTMLButtonElement {
+  const element = requiredElement(id);
+  if (!(element instanceof HTMLButtonElement)) {
+    throw new Error(`#${id} is not a button`);
   }
   return element;
 }
