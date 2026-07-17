@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 import sirv from "sirv";
-import { createServer as createViteServer } from "vite";
 import { WebSocketServer } from "ws";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -50,6 +49,7 @@ export async function startServer({
   let vite;
 
   if (mode === "development") {
+    const { createServer: createViteServer } = await import("vite");
     vite = await createViteServer({
       root,
       appType: "spa",
