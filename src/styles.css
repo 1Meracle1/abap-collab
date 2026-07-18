@@ -217,6 +217,7 @@ button {
 .sidebar {
   position: relative;
   min-width: 0;
+  min-height: 0;
   border-right: 1px solid var(--border);
   background: var(--app-background);
   font-size: 12px;
@@ -281,6 +282,42 @@ body.explorer-resizing * {
   color: var(--foreground);
   font-size: 11px;
   font-weight: 700;
+}
+
+.section-disclosure {
+  display: grid;
+  width: 18px;
+  height: 22px;
+  flex: 0 0 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  place-items: center;
+}
+
+.section-disclosure:hover {
+  background: var(--button-hover);
+}
+
+.section-disclosure:focus-visible {
+  outline: 1px solid var(--focus-border);
+  outline-offset: -1px;
+}
+
+.section-chevron {
+  width: 0;
+  height: 0;
+  border-top: 5px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  transition: transform 100ms ease;
+}
+
+.section-disclosure[aria-expanded="false"] .section-chevron {
+  transform: rotate(-90deg);
 }
 
 .explorer-title {

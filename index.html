@@ -65,57 +65,80 @@
           <div id="explorer-view" class="sidebar-view">
             <div class="sidebar-heading">EXPLORER</div>
             <section class="explorer-section">
-            <div class="section-title explorer-title">
-              <span>⌄</span>
-              <span>ABAP ROOM</span>
-              <span class="explorer-actions">
-                <button id="new-file" class="explorer-action" type="button" aria-label="New file" title="New File">
-                  <span class="codicon codicon-new-file" aria-hidden="true"></span>
-                </button>
-                <button id="new-folder" class="explorer-action" type="button" aria-label="New folder" title="New Folder">
-                  <span class="codicon codicon-new-folder" aria-hidden="true"></span>
-                </button>
+              <div class="section-title explorer-title">
                 <button
-                  id="explorer-menu-button"
-                  class="explorer-action explorer-menu-button"
+                  id="room-section-toggle"
+                  class="section-disclosure"
                   type="button"
-                  aria-label="More Explorer actions"
-                  aria-haspopup="menu"
-                  title="More Actions"
-                >
-                  <span class="codicon codicon-more" aria-hidden="true"></span>
-                </button>
-              </span>
-            </div>
-            <div id="explorer-tree" class="explorer-tree" role="tree" aria-label="Room files" tabindex="0"></div>
-            <div id="explorer-menu" class="explorer-menu" role="menu" hidden>
-              <button type="button" role="menuitem" data-command="new-file"><span>New File</span><kbd>Ctrl+N</kbd></button>
-              <button type="button" role="menuitem" data-command="new-folder"><span>New Folder</span></button>
-              <span class="menu-separator" role="separator"></span>
-              <button type="button" role="menuitem" data-command="rename"><span>Rename</span><kbd>F2</kbd></button>
-              <button type="button" role="menuitem" data-command="cut"><span>Cut</span><kbd>Ctrl+X</kbd></button>
-              <button type="button" role="menuitem" data-command="copy"><span>Copy</span><kbd>Ctrl+C</kbd></button>
-              <button type="button" role="menuitem" data-command="paste"><span>Paste</span><kbd>Ctrl+V</kbd></button>
-              <span class="menu-separator" role="separator"></span>
-              <button type="button" role="menuitem" data-command="delete"><span>Delete</span><kbd>Delete</kbd></button>
-            </div>
+                  aria-label="Collapse ABAP ROOM"
+                  aria-controls="room-section-content"
+                  aria-expanded="true"
+                  title="Collapse ABAP ROOM"
+                ><span class="section-chevron" aria-hidden="true"></span></button>
+                <span>ABAP ROOM</span>
+                <span class="explorer-actions">
+                  <button id="new-file" class="explorer-action" type="button" aria-label="New file" title="New File">
+                    <span class="codicon codicon-new-file" aria-hidden="true"></span>
+                  </button>
+                  <button id="new-folder" class="explorer-action" type="button" aria-label="New folder" title="New Folder">
+                    <span class="codicon codicon-new-folder" aria-hidden="true"></span>
+                  </button>
+                  <button
+                    id="explorer-menu-button"
+                    class="explorer-action explorer-menu-button"
+                    type="button"
+                    aria-label="More Explorer actions"
+                    aria-haspopup="menu"
+                    title="More Actions"
+                  >
+                    <span class="codicon codicon-more" aria-hidden="true"></span>
+                  </button>
+                </span>
+              </div>
+              <div id="room-section-content">
+                <div id="explorer-tree" class="explorer-tree" role="tree" aria-label="Room files" tabindex="0"></div>
+                <div id="explorer-menu" class="explorer-menu" role="menu" hidden>
+                  <button type="button" role="menuitem" data-command="new-file"><span>New File</span><kbd>Ctrl+N</kbd></button>
+                  <button type="button" role="menuitem" data-command="new-folder"><span>New Folder</span></button>
+                  <span class="menu-separator" role="separator"></span>
+                  <button type="button" role="menuitem" data-command="rename"><span>Rename</span><kbd>F2</kbd></button>
+                  <button type="button" role="menuitem" data-command="cut"><span>Cut</span><kbd>Ctrl+X</kbd></button>
+                  <button type="button" role="menuitem" data-command="copy"><span>Copy</span><kbd>Ctrl+C</kbd></button>
+                  <button type="button" role="menuitem" data-command="paste"><span>Paste</span><kbd>Ctrl+V</kbd></button>
+                  <span class="menu-separator" role="separator"></span>
+                  <button type="button" role="menuitem" data-command="delete"><span>Delete</span><kbd>Delete</kbd></button>
+                </div>
+              </div>
             </section>
             <section class="presence-section">
-            <div class="section-title"><span>⌄</span> PARTICIPANTS</div>
-            <label class="name-label" for="display-name">Your name</label>
-            <input id="display-name" class="name-input" maxlength="32" autocomplete="off" />
-            <div class="color-heading">
-              <span>Your color</span>
-              <span id="color-help" class="color-help">Used colors are unavailable</span>
-            </div>
-            <div
-              id="color-picker"
-              class="color-picker"
-              role="radiogroup"
-              aria-label="Your collaboration color"
-              aria-describedby="color-help"
-            ></div>
-            <div id="participants" class="participants" aria-live="polite"></div>
+              <div class="section-title">
+                <button
+                  id="participants-section-toggle"
+                  class="section-disclosure"
+                  type="button"
+                  aria-label="Collapse PARTICIPANTS"
+                  aria-controls="participants-section-content"
+                  aria-expanded="true"
+                  title="Collapse PARTICIPANTS"
+                ><span class="section-chevron" aria-hidden="true"></span></button>
+                <span>PARTICIPANTS</span>
+              </div>
+              <div id="participants-section-content">
+                <label class="name-label" for="display-name">Your name</label>
+                <input id="display-name" class="name-input" maxlength="32" autocomplete="off" />
+                <div class="color-heading">
+                  <span>Your color</span>
+                  <span id="color-help" class="color-help">Used colors are unavailable</span>
+                </div>
+                <div
+                  id="color-picker"
+                  class="color-picker"
+                  role="radiogroup"
+                  aria-label="Your collaboration color"
+                  aria-describedby="color-help"
+                ></div>
+                <div id="participants" class="participants" aria-live="polite"></div>
+              </div>
             </section>
           </div>
           <div id="search-view" class="sidebar-view search-view" hidden>

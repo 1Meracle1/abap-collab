@@ -163,6 +163,8 @@ let explorerWidth = explorerSidebar.getBoundingClientRect().width;
 
 explorerToggle.addEventListener("click", toggleExplorer);
 searchToggle.addEventListener("click", () => toggleSidebarView("search"));
+setupSectionDisclosure("room-section-toggle", "room-section-content", "ABAP ROOM");
+setupSectionDisclosure("participants-section-toggle", "participants-section-content", "PARTICIPANTS");
 explorerResizer.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) {
     return;
@@ -218,6 +220,19 @@ function setExplorerWidth(width: number): void {
   workbench.style.setProperty("--explorer-width", `${explorerWidth}px`);
   explorerResizer.setAttribute("aria-valuemax", String(upperBound));
   explorerResizer.setAttribute("aria-valuenow", String(explorerWidth));
+}
+
+function setupSectionDisclosure(buttonId: string, contentId: string, label: string): void {
+  const button = requiredButton(buttonId);
+  const content = requiredElement(contentId);
+  button.addEventListener("click", () => {
+    const expanded = button.getAttribute("aria-expanded") !== "true";
+    const actionLabel = `${expanded ? "Collapse" : "Expand"} ${label}`;
+    button.setAttribute("aria-expanded", String(expanded));
+    button.setAttribute("aria-label", actionLabel);
+    button.title = actionLabel;
+    content.hidden = !expanded;
+  });
 }
 
 function finishExplorerResize(event: PointerEvent): void {
