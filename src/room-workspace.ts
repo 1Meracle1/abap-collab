@@ -395,7 +395,7 @@ export class RoomWorkspace {
     row.append(
       icon("folder-chevron", ""),
       icon(
-        pending.kind === "file" ? "generic-file-icon codicon" : "folder-icon codicon",
+        pending.kind === "file" ? "file-type-icon generic-file-icon codicon" : "folder-icon codicon",
         pending.kind === "file" ? "\uea7b" : "\uea83",
       ),
     );
@@ -957,12 +957,22 @@ function fileIcon(path: string, id?: string): HTMLSpanElement {
 function languageForPath(path: string): FileLanguage {
   const lowerPath = path.toLowerCase();
   if (lowerPath.endsWith(".abap")) {
-    return { id: "abap", label: "ABAP", iconClass: "abap-file-icon", iconText: "A" };
+    return { id: "abap", label: "ABAP", iconClass: "file-type-icon abap-file-icon", iconText: "A" };
   }
   if (lowerPath.endsWith(".ddls")) {
-    return { id: "abap-cds", label: "ABAP CDS", iconClass: "generic-file-icon", iconText: "▤" };
+    return {
+      id: "abap-cds",
+      label: "ABAP CDS",
+      iconClass: "file-type-icon cds-file-icon codicon",
+      iconText: "\ueace",
+    };
   }
-  return { id: "plaintext", label: "Plain Text", iconClass: "generic-file-icon", iconText: "▤" };
+  return {
+    id: "plaintext",
+    label: "Plain Text",
+    iconClass: "file-type-icon generic-file-icon codicon",
+    iconText: "\uea7b",
+  };
 }
 
 function label(value: string): HTMLSpanElement {

@@ -18,6 +18,7 @@
   --abap-icon-foreground: #f0ab3d;
   --abap-icon-background: #302718;
   --abap-icon-border: #795722;
+  --cds-icon-foreground: #4ec9b0;
   --pending-foreground: #d7ba7d;
   --connected-foreground: #89d185;
   --toast-background: #252526;
@@ -48,6 +49,7 @@
   --abap-icon-foreground: #8a4b08;
   --abap-icon-background: #fff4ce;
   --abap-icon-border: #c59b45;
+  --cds-icon-foreground: #267f99;
   --pending-foreground: #795e26;
   --connected-foreground: #16825d;
   --toast-background: #f3f3f3;
@@ -438,12 +440,22 @@ body.explorer-resizing * {
 }
 
 .folder-icon,
-.generic-file-icon {
+.file-type-icon {
   display: inline-grid;
-  width: 15px;
-  flex: 0 0 15px;
+  width: 16px;
+  height: 18px;
+  flex: 0 0 16px;
   place-items: center;
+  line-height: 1;
+}
+
+.folder-icon,
+.generic-file-icon {
   color: var(--muted-foreground);
+}
+
+.cds-file-icon {
+  color: var(--cds-icon-foreground);
 }
 
 .create-row {
