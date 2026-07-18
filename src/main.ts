@@ -149,6 +149,19 @@ themeToggle.addEventListener("click", () => {
 });
 updateThemeToggle();
 
+const workbench = document.querySelector<HTMLElement>(".workbench")!;
+const explorerToggle = requiredButton("explorer-toggle");
+explorerToggle.addEventListener("click", toggleExplorer);
+window.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey &&
+      event.key.toLowerCase() === "b") {
+    event.preventDefault();
+    if (!event.repeat) {
+      toggleExplorer();
+    }
+  }
+}, true);
+
 const cursorPosition = requiredElement("cursor-position");
 editor.onDidChangeCursorPosition(({ position }) => {
   cursorPosition.textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
@@ -246,6 +259,14 @@ function updateThemeToggle(): void {
   themeToggle.textContent = `${theme.icon} ${colorTheme === "dark" ? "Light" : "Dark"}`;
   themeToggle.setAttribute("aria-label", theme.label);
   themeToggle.title = theme.label;
+}
+
+function toggleExplorer(): void {
+  const visible = workbench.classList.toggle("explorer-hidden") === false;
+  explorerToggle.classList.toggle("active", visible);
+  explorerToggle.setAttribute("aria-expanded", String(visible));
+  explorerToggle.setAttribute("aria-label", `${visible ? "Hide" : "Show"} Explorer`);
+  explorerToggle.title = `${visible ? "Hide" : "Show"} Explorer (Ctrl+B)`;
 }
 
 function readColorTheme(): ColorTheme {

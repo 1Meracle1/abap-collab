@@ -179,13 +179,16 @@ button {
 }
 
 .activity-item {
+  display: grid;
   position: relative;
   height: 48px;
+  padding: 0;
   border: 0;
   background: transparent;
   color: var(--activity-foreground);
   font-size: 25px;
-  cursor: default;
+  cursor: pointer;
+  place-items: center;
 }
 
 .activity-item.active {
@@ -200,6 +203,10 @@ button {
   content: "";
 }
 
+.activity-item .codicon {
+  font-size: 24px;
+}
+
 .activity-spacer {
   flex: 1;
 }
@@ -209,6 +216,14 @@ button {
   border-right: 1px solid var(--border);
   background: var(--app-background);
   font-size: 12px;
+}
+
+.workbench.explorer-hidden {
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.workbench.explorer-hidden .sidebar {
+  display: none;
 }
 
 .sidebar-heading {
@@ -318,6 +333,10 @@ button {
 
 .codicon-new-file::before {
   content: "\ea7f";
+}
+
+.codicon-files::before {
+  content: "\eaf0";
 }
 
 .codicon-new-folder::before {
@@ -631,6 +650,10 @@ button {
 
 @media (max-width: 720px) {
   .workbench {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .workbench.explorer-hidden {
     grid-template-columns: 42px minmax(0, 1fr);
   }
 

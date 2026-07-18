@@ -35,14 +35,22 @@
 
       <main class="workbench">
         <nav class="activitybar" aria-label="Activity bar">
-          <button class="activity-item active" type="button" aria-label="Explorer">▱</button>
-          <button class="activity-item" type="button" aria-label="Search">⌕</button>
-          <button class="activity-item" type="button" aria-label="Source control">⑂</button>
+          <button
+            id="explorer-toggle"
+            class="activity-item active"
+            type="button"
+            aria-label="Hide Explorer"
+            aria-controls="explorer-sidebar"
+            aria-expanded="true"
+            title="Hide Explorer (Ctrl+B)"
+          >
+            <span class="codicon codicon-files" aria-hidden="true"></span>
+          </button>
           <div class="activity-spacer"></div>
           <button class="activity-item" type="button" aria-label="Settings">⚙</button>
         </nav>
 
-        <aside class="sidebar">
+        <aside id="explorer-sidebar" class="sidebar">
           <div class="sidebar-heading">EXPLORER</div>
           <section class="explorer-section">
             <div class="section-title explorer-title">
