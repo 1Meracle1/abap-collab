@@ -45,13 +45,13 @@ const colorThemes: Record<ColorTheme, {
   metaColor: string;
 }> = {
   dark: {
-    editor: "Visual Studio Dark",
+    editor: "Dark+",
     label: "Switch to light theme",
     icon: "☀",
     metaColor: "#181818",
   },
   light: {
-    editor: "Visual Studio Light",
+    editor: "Light+",
     label: "Switch to dark theme",
     icon: "☾",
     metaColor: "#f3f3f3",

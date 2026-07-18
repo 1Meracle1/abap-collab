@@ -14,6 +14,9 @@ The ABAP language registration is not a copied browser grammar. The build uses
 a pinned release of `1Meracle1/abap-language-basics`, keeping the browser and
 VSIX behavior on the same source files.
 
+The editor uses VS Code's built-in **Dark+** and **Light+** code themes. The site
+chrome continues to follow the matching dark or light application theme.
+
 ## Run Locally
 
 Use Node.js 22.12 or newer:
