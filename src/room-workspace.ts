@@ -27,6 +27,13 @@ interface ExplorerClipboard {
   paths: string[];
 }
 
+interface FileLanguage {
+  id: string;
+  label: string;
+  iconClass: string;
+  iconText: string;
+}
+
 type ExplorerCommand = "new-file" | "new-folder" | "rename" | "cut" | "copy" | "paste" | "delete";
 
 export function ensureWorkspaceDocument(document: Y.Doc): void {
@@ -311,9 +318,10 @@ export class RoomWorkspace {
       this.binding?.destroy();
       this.activePath = path;
       const uri = fileUri(path);
+      const language = languageForPath(path);
       const model = monaco.editor.getModel(uri) ?? monaco.editor.createModel(
         text.toString(),
-        path.toLowerCase().endsWith(".abap") ? "abap" : "plaintext",
+        language.id,
         uri,
       );
       this.editor.setModel(model);
@@ -340,6 +348,7 @@ export class RoomWorkspace {
     tabFileName.textContent = name;
     tabFileName.title = name;
     requiredElement("tab-file-icon").replaceWith(fileIcon(path, "tab-file-icon"));
+    requiredElement("language-status").textContent = languageForPath(path).label;
 
     const breadcrumbs = requiredElement("breadcrumbs");
     breadcrumbs.replaceChildren();
@@ -365,6 +374,7 @@ export class RoomWorkspace {
     tabFileName.textContent = "No file open";
     tabFileName.title = "No file open";
     requiredElement("tab-file-icon").replaceWith(fileIcon("", "tab-file-icon"));
+    requiredElement("language-status").textContent = "Plain Text";
     requiredElement("breadcrumbs").replaceChildren(label("ABAP ROOM"));
   }
 
@@ -938,10 +948,21 @@ function icon(className: string, content: string): HTMLSpanElement {
 }
 
 function fileIcon(path: string, id?: string): HTMLSpanElement {
-  const isAbap = path.toLowerCase().endsWith(".abap");
-  const element = icon(isAbap ? "abap-file-icon" : "generic-file-icon", isAbap ? "A" : "▤");
+  const language = languageForPath(path);
+  const element = icon(language.iconClass, language.iconText);
   if (id !== undefined) element.id = id;
   return element;
+}
+
+function languageForPath(path: string): FileLanguage {
+  const lowerPath = path.toLowerCase();
+  if (lowerPath.endsWith(".abap")) {
+    return { id: "abap", label: "ABAP", iconClass: "abap-file-icon", iconText: "A" };
+  }
+  if (lowerPath.endsWith(".ddls")) {
+    return { id: "abap-cds", label: "ABAP CDS", iconClass: "generic-file-icon", iconText: "▤" };
+  }
+  return { id: "plaintext", label: "Plain Text", iconClass: "generic-file-icon", iconText: "▤" };
 }
 
 function label(value: string): HTMLSpanElement {
