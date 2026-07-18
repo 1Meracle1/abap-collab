@@ -151,7 +151,44 @@ updateThemeToggle();
 
 const workbench = document.querySelector<HTMLElement>(".workbench")!;
 const explorerToggle = requiredButton("explorer-toggle");
+const explorerSidebar = requiredElement("explorer-sidebar");
+const explorerResizer = requiredElement("explorer-resizer");
+const minimumExplorerWidth = 160;
+const maximumExplorerWidth = 600;
+const minimumEditorWidth = 320;
+let explorerWidth = explorerSidebar.getBoundingClientRect().width;
+
 explorerToggle.addEventListener("click", toggleExplorer);
+explorerResizer.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) {
+    return;
+  }
+  event.preventDefault();
+  explorerResizer.setPointerCapture(event.pointerId);
+  explorerResizer.classList.add("dragging");
+  document.body.classList.add("explorer-resizing");
+});
+explorerResizer.addEventListener("pointermove", (event) => {
+  if (!explorerResizer.hasPointerCapture(event.pointerId)) {
+    return;
+  }
+  setExplorerWidth(event.clientX - explorerSidebar.getBoundingClientRect().left);
+});
+explorerResizer.addEventListener("pointerup", finishExplorerResize);
+explorerResizer.addEventListener("pointercancel", finishExplorerResize);
+explorerResizer.addEventListener("lostpointercapture", finishExplorerResize);
+explorerResizer.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+    return;
+  }
+  event.preventDefault();
+  setExplorerWidth(explorerWidth + (event.key === "ArrowLeft" ? -10 : 10));
+});
+window.addEventListener("resize", () => {
+  if (window.matchMedia("(min-width: 721px)").matches) {
+    setExplorerWidth(explorerWidth);
+  }
+});
 window.addEventListener("keydown", (event) => {
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey &&
       event.key.toLowerCase() === "b") {
@@ -161,6 +198,24 @@ window.addEventListener("keydown", (event) => {
     }
   }
 }, true);
+
+function setExplorerWidth(width: number): void {
+  const activityBarWidth = workbench.querySelector<HTMLElement>(".activitybar")!.offsetWidth;
+  const availableWidth = workbench.clientWidth - activityBarWidth - minimumEditorWidth;
+  const upperBound = Math.max(minimumExplorerWidth, Math.min(maximumExplorerWidth, availableWidth));
+  explorerWidth = Math.round(Math.max(minimumExplorerWidth, Math.min(width, upperBound)));
+  workbench.style.setProperty("--explorer-width", `${explorerWidth}px`);
+  explorerResizer.setAttribute("aria-valuemax", String(upperBound));
+  explorerResizer.setAttribute("aria-valuenow", String(explorerWidth));
+}
+
+function finishExplorerResize(event: PointerEvent): void {
+  if (explorerResizer.hasPointerCapture(event.pointerId)) {
+    explorerResizer.releasePointerCapture(event.pointerId);
+  }
+  explorerResizer.classList.remove("dragging");
+  document.body.classList.remove("explorer-resizing");
+}
 
 const cursorPosition = requiredElement("cursor-position");
 editor.onDidChangeCursorPosition(({ position }) => {

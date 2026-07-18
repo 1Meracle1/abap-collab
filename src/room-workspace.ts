@@ -336,7 +336,9 @@ export class RoomWorkspace {
   private updateFileLabels(path: string): void {
     const name = baseName(path);
     requiredElement("titlebar-label").textContent = `${name} — ABAP Collaborate`;
-    requiredElement("tab-file-name").textContent = name;
+    const tabFileName = requiredElement("tab-file-name");
+    tabFileName.textContent = name;
+    tabFileName.title = name;
     requiredElement("tab-file-icon").replaceWith(fileIcon(path, "tab-file-icon"));
 
     const breadcrumbs = requiredElement("breadcrumbs");
@@ -359,7 +361,9 @@ export class RoomWorkspace {
     this.editor.setModel(null);
     this.activePath = "";
     requiredElement("titlebar-label").textContent = "ABAP Collaborate";
-    requiredElement("tab-file-name").textContent = "No file open";
+    const tabFileName = requiredElement("tab-file-name");
+    tabFileName.textContent = "No file open";
+    tabFileName.title = "No file open";
     requiredElement("tab-file-icon").replaceWith(fileIcon("", "tab-file-icon"));
     requiredElement("breadcrumbs").replaceChildren(label("ABAP ROOM"));
   }

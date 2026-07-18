@@ -165,8 +165,9 @@ button {
 }
 
 .workbench {
+  --explorer-width: 230px;
   display: grid;
-  grid-template-columns: 48px 230px minmax(0, 1fr);
+  grid-template-columns: 48px var(--explorer-width) minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -212,10 +213,45 @@ button {
 }
 
 .sidebar {
+  position: relative;
   min-width: 0;
   border-right: 1px solid var(--border);
   background: var(--app-background);
   font-size: 12px;
+}
+
+.explorer-resizer {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.explorer-resizer::after {
+  position: absolute;
+  inset: 0 2px;
+  background: transparent;
+  content: "";
+}
+
+.explorer-resizer:hover::after,
+.explorer-resizer:focus-visible::after,
+.explorer-resizer.dragging::after {
+  background: var(--focus-border);
+}
+
+.explorer-resizer:focus-visible {
+  outline: none;
+}
+
+body.explorer-resizing,
+body.explorer-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .workbench.explorer-hidden {
@@ -557,6 +593,17 @@ button {
 
 .editor-tab.active {
   border-top: 1px solid #0078d4;
+}
+
+#tab-file-icon {
+  flex: 0 0 auto;
+}
+
+.tab-file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .breadcrumbs {
