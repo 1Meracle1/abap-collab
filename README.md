@@ -10,9 +10,10 @@ Rooms created by the earlier single-file client are migrated to `report.abap`
 by either the Worker or the browser, so a frontend deployment does not require
 an exactly simultaneous Worker restart.
 
-The ABAP language registration is not a copied browser grammar. The build uses
-a pinned release of `1Meracle1/abap-language-basics`, keeping the browser and
-VSIX behavior on the same source files.
+The ABAP and ABAP CDS language registrations are not copied browser grammars.
+The build uses a pinned release of `1Meracle1/abap-language-basics`, keeping the
+browser and VSIX behavior on the same ABAP, AMDP SQLScript, and CDS grammar
+source files.
 
 The editor uses VS Code's built-in **Dark+** and **Light+** code themes. The site
 chrome continues to follow the matching dark or light application theme.
@@ -45,7 +46,8 @@ production. Room documents are stored in local Wrangler state while developing.
 - `src/main.ts` initializes Monaco with VS Code language, TextMate, theme,
   configuration, file, and snippet services.
 - `src/abap-extension.ts` registers `abap-language-basics` as a declarative
-  browser extension and maps its contributed files into the extension host.
+  browser extension and maps its ABAP and CDS grammars, configurations, and
+  snippets into the extension host.
 - `src/room-workspace.ts` owns the collaborative file tree, Explorer UI, Monaco
   models, and the active `y-monaco` binding.
 - Yjs maps store room file paths, folder paths, and one shared text type per
