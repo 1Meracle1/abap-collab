@@ -19,6 +19,7 @@ import * as Y from "yjs";
 
 import { registerAbapLanguageBasics } from "./abap-extension";
 import { ensureRoomUrl } from "./room";
+import { RoomSearch } from "./room-search";
 import { ensureWorkspaceDocument, RoomWorkspace } from "./room-workspace";
 
 declare global {
@@ -124,6 +125,7 @@ provider.awareness.setLocalStateField("user", localUser);
 await waitForInitialSync(provider);
 ensureWorkspaceDocument(ydoc);
 const roomWorkspace = new RoomWorkspace(ydoc, provider.awareness, editor, workspaceFileSystem);
+const roomSearch = new RoomSearch(ydoc, roomWorkspace);
 
 const nameInput = requiredInput("display-name");
 nameInput.value = displayName;
@@ -151,6 +153,7 @@ updateThemeToggle();
 
 const workbench = document.querySelector<HTMLElement>(".workbench")!;
 const explorerToggle = requiredButton("explorer-toggle");
+const searchToggle = requiredButton("search-toggle");
 const explorerSidebar = requiredElement("explorer-sidebar");
 const explorerResizer = requiredElement("explorer-resizer");
 const minimumExplorerWidth = 160;
@@ -159,6 +162,7 @@ const minimumEditorWidth = 320;
 let explorerWidth = explorerSidebar.getBoundingClientRect().width;
 
 explorerToggle.addEventListener("click", toggleExplorer);
+searchToggle.addEventListener("click", () => toggleSidebarView("search"));
 explorerResizer.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) {
     return;
@@ -190,6 +194,13 @@ window.addEventListener("resize", () => {
   }
 });
 window.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && !event.altKey &&
+      event.key.toLowerCase() === "f") {
+    event.preventDefault();
+    showSidebarView("search");
+    roomSearch.focus();
+    return;
+  }
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey &&
       event.key.toLowerCase() === "b") {
     event.preventDefault();
@@ -239,6 +250,7 @@ renderParticipants();
 
 window.addEventListener("beforeunload", () => {
   roomWorkspace.destroy();
+  roomSearch.destroy();
   provider.destroy();
   ydoc.destroy();
 });
@@ -317,11 +329,44 @@ function updateThemeToggle(): void {
 }
 
 function toggleExplorer(): void {
-  const visible = workbench.classList.toggle("explorer-hidden") === false;
-  explorerToggle.classList.toggle("active", visible);
-  explorerToggle.setAttribute("aria-expanded", String(visible));
-  explorerToggle.setAttribute("aria-label", `${visible ? "Hide" : "Show"} Explorer`);
-  explorerToggle.title = `${visible ? "Hide" : "Show"} Explorer (Ctrl+B)`;
+  toggleSidebarView("explorer");
+}
+
+type SidebarView = "explorer" | "search";
+
+function toggleSidebarView(view: SidebarView): void {
+  const viewElement = requiredElement(`${view}-view`);
+  if (!workbench.classList.contains("explorer-hidden") && !viewElement.hidden) {
+    hideSidebar();
+    return;
+  }
+  showSidebarView(view);
+}
+
+function showSidebarView(view: SidebarView): void {
+  workbench.classList.remove("explorer-hidden");
+  requiredElement("explorer-view").hidden = view !== "explorer";
+  requiredElement("search-view").hidden = view !== "search";
+  explorerToggle.classList.toggle("active", view === "explorer");
+  searchToggle.classList.toggle("active", view === "search");
+  explorerToggle.setAttribute("aria-expanded", String(view === "explorer"));
+  searchToggle.setAttribute("aria-expanded", String(view === "search"));
+  explorerToggle.setAttribute("aria-label", view === "explorer" ? "Hide Explorer" : "Show Explorer");
+  explorerToggle.title = `${view === "explorer" ? "Hide" : "Show"} Explorer (Ctrl+B)`;
+  searchToggle.setAttribute("aria-label", view === "search" ? "Hide Search" : "Show Search");
+  searchToggle.title = `${view === "search" ? "Hide" : "Show"} Search (Ctrl+Shift+F)`;
+}
+
+function hideSidebar(): void {
+  workbench.classList.add("explorer-hidden");
+  explorerToggle.classList.remove("active");
+  searchToggle.classList.remove("active");
+  explorerToggle.setAttribute("aria-expanded", "false");
+  searchToggle.setAttribute("aria-expanded", "false");
+  explorerToggle.setAttribute("aria-label", "Show Explorer");
+  searchToggle.setAttribute("aria-label", "Show Search");
+  explorerToggle.title = "Show Explorer (Ctrl+B)";
+  searchToggle.title = "Show Search (Ctrl+Shift+F)";
 }
 
 function readColorTheme(): ColorTheme {

@@ -46,13 +46,25 @@
           >
             <span class="codicon codicon-files" aria-hidden="true"></span>
           </button>
+          <button
+            id="search-toggle"
+            class="activity-item"
+            type="button"
+            aria-label="Show Search"
+            aria-controls="explorer-sidebar"
+            aria-expanded="false"
+            title="Search (Ctrl+Shift+F)"
+          >
+            <span class="codicon codicon-search" aria-hidden="true"></span>
+          </button>
           <div class="activity-spacer"></div>
           <button class="activity-item" type="button" aria-label="Settings">⚙</button>
         </nav>
 
         <aside id="explorer-sidebar" class="sidebar">
-          <div class="sidebar-heading">EXPLORER</div>
-          <section class="explorer-section">
+          <div id="explorer-view" class="sidebar-view">
+            <div class="sidebar-heading">EXPLORER</div>
+            <section class="explorer-section">
             <div class="section-title explorer-title">
               <span>⌄</span>
               <span>ABAP ROOM</span>
@@ -87,8 +99,8 @@
               <span class="menu-separator" role="separator"></span>
               <button type="button" role="menuitem" data-command="delete"><span>Delete</span><kbd>Delete</kbd></button>
             </div>
-          </section>
-          <section class="presence-section">
+            </section>
+            <section class="presence-section">
             <div class="section-title"><span>⌄</span> PARTICIPANTS</div>
             <label class="name-label" for="display-name">Your name</label>
             <input id="display-name" class="name-input" maxlength="32" autocomplete="off" />
@@ -104,7 +116,62 @@
               aria-describedby="color-help"
             ></div>
             <div id="participants" class="participants" aria-live="polite"></div>
-          </section>
+            </section>
+          </div>
+          <div id="search-view" class="sidebar-view search-view" hidden>
+            <div class="sidebar-heading">SEARCH</div>
+            <div class="search-form">
+              <div class="search-row">
+                <button
+                  id="replace-toggle"
+                  class="search-disclosure codicon"
+                  type="button"
+                  aria-label="Toggle Replace"
+                  aria-expanded="false"
+                  title="Toggle Replace"
+                >&#xeab6;</button>
+                <div class="search-input-wrap">
+                  <input
+                    id="search-input"
+                    class="search-input"
+                    type="text"
+                    placeholder="Search"
+                    aria-label="Search"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <span class="search-options">
+                    <button id="search-case" class="search-option" type="button" aria-pressed="false" title="Match Case (Alt+C)">Aa</button>
+                    <button id="search-word" class="search-option" type="button" aria-pressed="false" title="Match Whole Word (Alt+W)">ab</button>
+                    <button id="search-regex" class="search-option" type="button" aria-pressed="false" title="Use Regular Expression (Alt+R)">.*</button>
+                  </span>
+                </div>
+              </div>
+              <div id="replace-row" class="search-row replace-row" hidden>
+                <span class="search-indent" aria-hidden="true"></span>
+                <input
+                  id="replace-input"
+                  class="search-input replace-input"
+                  type="text"
+                  placeholder="Replace"
+                  aria-label="Replace"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button id="replace-all" class="search-icon-button codicon" type="button" title="Replace All" aria-label="Replace All">&#xeb3d;</button>
+              </div>
+              <details class="search-details">
+                <summary>files to include / exclude</summary>
+                <label for="search-include">files to include</label>
+                <input id="search-include" class="search-filter" type="text" placeholder="e.g. *.abap, src/**" autocomplete="off" spellcheck="false" />
+                <label for="search-exclude">files to exclude</label>
+                <input id="search-exclude" class="search-filter" type="text" placeholder="e.g. generated/**" autocomplete="off" spellcheck="false" />
+              </details>
+              <div id="search-error" class="search-error" role="alert" hidden></div>
+            </div>
+            <div id="search-summary" class="search-summary" aria-live="polite">Enter a search term to search across files.</div>
+            <div id="search-results" class="search-results" role="tree" aria-label="Search results"></div>
+          </div>
           <div
             id="explorer-resizer"
             class="explorer-resizer"

@@ -119,6 +119,23 @@ export class RoomWorkspace {
     }
   }
 
+  openSearchResult(
+    path: string,
+    lineNumber: number,
+    startColumn: number,
+    endLineNumber: number,
+    endColumn: number,
+  ): void {
+    if (!this.files.has(path)) {
+      return;
+    }
+    this.openFile(path, false);
+    const selection = new monaco.Selection(lineNumber, startColumn, endLineNumber, endColumn);
+    this.editor.setSelection(selection);
+    this.editor.revealRangeInCenterIfOutsideViewport(selection);
+    this.editor.focus();
+  }
+
   private handleStructureChange(): void {
     if (this.mutatingStructure) {
       return;
