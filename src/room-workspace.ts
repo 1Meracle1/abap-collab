@@ -3,9 +3,10 @@ import {
   RegisteredFileSystemProvider,
 } from "@codingame/monaco-vscode-files-service-override";
 import * as monaco from "monaco-editor";
-import { MonacoBinding } from "y-monaco";
 import type { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
+
+import { CollaborativeMonacoBinding } from "./collaborative-monaco-binding";
 
 const workspaceRoot = "/workspace";
 
@@ -57,7 +58,7 @@ export class RoomWorkspace {
   private pendingCreation: PendingCreation | undefined;
   private pendingRename: string | undefined;
   private clipboard: ExplorerClipboard | undefined;
-  private binding: MonacoBinding | undefined;
+  private binding: CollaborativeMonacoBinding | undefined;
   private mutatingStructure = false;
 
   constructor(
@@ -342,7 +343,7 @@ export class RoomWorkspace {
         uri,
       );
       this.editor.setModel(model);
-      this.binding = new MonacoBinding(text, model, new Set([this.editor]), this.awareness);
+      this.binding = new CollaborativeMonacoBinding(text, model, this.editor, this.awareness);
       this.updateFileLabels(path);
     }
     if (!this.selectedPaths.has(path)) {

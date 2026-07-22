@@ -99,6 +99,7 @@ const editor = monaco.editor.create(editorElement, {
   padding: { top: 28 },
   renderWhitespace: "selection",
   smoothScrolling: true,
+  detectIndentation: false,
   tabSize: 2,
   insertSpaces: true,
   bracketPairColorization: { enabled: true },

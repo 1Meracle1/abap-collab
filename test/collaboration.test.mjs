@@ -7,6 +7,7 @@ import * as syncProtocol from "y-protocols/sync";
 import * as Y from "yjs";
 
 import { CollaborationRoom } from "../worker/index.js";
+import { createRelativeSelection } from "../src/selection-affinity.ts";
 
 test("synchronizes and restores ABAP edits through a durable room", async () => {
   const storage = new MemoryStorage();
@@ -99,6 +100,57 @@ test("migrates the single-file room document into the shared workspace", async (
     room.awareness.destroy();
     room.document.destroy();
   }
+});
+
+test("keeps a full-file selection stable when another user appends text", () => {
+  const firstDocument = new Y.Doc();
+  const secondDocument = new Y.Doc();
+  const firstText = firstDocument.getText("code");
+  const secondText = secondDocument.getText("code");
+  firstText.insert(0, "REPORT zselection.\n");
+  Y.applyUpdate(secondDocument, Y.encodeStateAsUpdate(firstDocument));
+  const originalLength = secondText.length;
+  const selection = createRelativeSelection(secondText, 0, originalLength);
+  const reverseSelection = createRelativeSelection(secondText, originalLength, 0);
+
+  let update;
+  firstDocument.once("update", (nextUpdate) => {
+    update = nextUpdate;
+  });
+  firstText.insert(firstText.length, "WRITE / 'Appended'.\n");
+  Y.applyUpdate(secondDocument, update);
+
+  const anchor = Y.createAbsolutePositionFromRelativePosition(selection.anchor, secondDocument);
+  const head = Y.createAbsolutePositionFromRelativePosition(selection.head, secondDocument);
+  const reverseAnchor = Y.createAbsolutePositionFromRelativePosition(
+    reverseSelection.anchor,
+    secondDocument,
+  );
+  const reverseHead = Y.createAbsolutePositionFromRelativePosition(
+    reverseSelection.head,
+    secondDocument,
+  );
+  assert.equal(anchor?.index, 0);
+  assert.equal(head?.index, originalLength);
+  assert.equal(reverseAnchor?.index, originalLength);
+  assert.equal(reverseHead?.index, 0);
+  firstDocument.destroy();
+  secondDocument.destroy();
+});
+
+test("keeps a collapsed end-of-file cursor attached to the end", () => {
+  const document = new Y.Doc();
+  const text = document.getText("code");
+  text.insert(0, "REPORT zcursor.\n");
+  const selection = createRelativeSelection(text, text.length, text.length);
+
+  text.insert(text.length, "WRITE / 'Appended'.\n");
+
+  const anchor = Y.createAbsolutePositionFromRelativePosition(selection.anchor, document);
+  const head = Y.createAbsolutePositionFromRelativePosition(selection.head, document);
+  assert.equal(anchor?.index, text.length);
+  assert.equal(head?.index, text.length);
+  document.destroy();
 });
 
 async function synchronize(room, socket, document) {
