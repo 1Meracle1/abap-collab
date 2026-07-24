@@ -22,7 +22,7 @@
     "@codingame/monaco-vscode-textmate-service-override": "35.0.1",
     "@codingame/monaco-vscode-theme-defaults-default-extension": "35.0.1",
     "@codingame/monaco-vscode-theme-service-override": "35.0.1",
-    "abap-language-basics": "github:1Meracle1/abap-language-basics#v0.0.5",
+    "abap-language-basics": "github:1Meracle1/abap-language-basics#v0.0.6",
     "lib0": "0.2.117",
     "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@35.0.1",
     "y-monaco": "0.1.6",
