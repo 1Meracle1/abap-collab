@@ -245,8 +245,11 @@ function finishExplorerResize(event: PointerEvent): void {
 }
 
 const cursorPosition = requiredElement("cursor-position");
-editor.onDidChangeCursorPosition(({ position }) => {
-  cursorPosition.textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
+editor.onDidChangeCursorSelection(({ selection }) => {
+  const selectedCharacterCount = editor.getModel()?.getCharacterCountInRange(selection) ?? 0;
+  cursorPosition.textContent =
+    `Ln ${selection.positionLineNumber}, Col ${selection.positionColumn}` +
+    (selectedCharacterCount === 0 ? "" : ` (${selectedCharacterCount} selected)`);
 });
 
 provider.awareness.on("change", updatePresence);
