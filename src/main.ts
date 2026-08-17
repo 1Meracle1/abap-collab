@@ -99,6 +99,7 @@ const editor = monaco.editor.create(editorElement, {
   padding: { top: 28 },
   renderWhitespace: "selection",
   smoothScrolling: true,
+  stickyScroll: { enabled: true, maxLineCount: 20 },
   detectIndentation: false,
   tabSize: 2,
   insertSpaces: true,
