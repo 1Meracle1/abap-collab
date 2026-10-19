@@ -1,6 +1,7 @@
 import {
   RegisteredFile,
   RegisteredFileSystemProvider,
+  RegisteredReadOnlyFile,
 } from "@codingame/monaco-vscode-files-service-override";
 import * as monaco from "monaco-editor";
 import type { Awareness } from "y-protocols/awareness";
@@ -9,6 +10,7 @@ import * as Y from "yjs";
 import { CollaborativeMonacoBinding } from "./collaborative-monaco-binding";
 
 const workspaceRoot = "/workspace";
+const explorerDragType = "application/x-abap-collab-paths";
 
 interface TreeEntry {
   kind: "file" | "folder";
@@ -28,6 +30,12 @@ interface ExplorerClipboard {
   paths: string[];
 }
 
+type LocalEntry =
+  | { kind: "file"; name: string; content: string | Uint8Array }
+  | { kind: "folder"; name: string; children: LocalEntry[] };
+
+export type WorkspaceFile = Y.Text | Uint8Array;
+
 interface FileLanguage {
   id: string;
   label: string;
@@ -38,7 +46,7 @@ interface FileLanguage {
 type ExplorerCommand = "new-file" | "new-folder" | "rename" | "cut" | "copy" | "paste" | "delete";
 
 export function ensureWorkspaceDocument(document: Y.Doc): void {
-  const files = document.getMap<Y.Text>("files");
+  const files = document.getMap<WorkspaceFile>("files");
   if (files.size !== 0) {
     return;
   }
@@ -46,10 +54,10 @@ export function ensureWorkspaceDocument(document: Y.Doc): void {
 }
 
 export class RoomWorkspace {
-  private readonly files: Y.Map<Y.Text>;
+  private readonly files: Y.Map<WorkspaceFile>;
   private readonly folders: Y.Map<boolean>;
   private readonly expandedFolders = new Set<string>();
-  private readonly registeredFiles = new Map<string, { dispose(): void }>();
+  private readonly registeredFiles = new Map<string, { content: WorkspaceFile; registration: monaco.IDisposable }>();
   private readonly selectedPaths = new Set<string>();
   private activePath = "";
   private selectedDirectory = "";
@@ -58,6 +66,9 @@ export class RoomWorkspace {
   private pendingCreation: PendingCreation | undefined;
   private pendingRename: string | undefined;
   private clipboard: ExplorerClipboard | undefined;
+  private draggedPaths: string[] = [];
+  private dropTarget: HTMLElement | undefined;
+  private binaryUrl: string | undefined;
   private binding: CollaborativeMonacoBinding | undefined;
   private mutatingStructure = false;
 
@@ -67,7 +78,7 @@ export class RoomWorkspace {
     private readonly editor: monaco.editor.IStandaloneCodeEditor,
     private readonly fileSystem: RegisteredFileSystemProvider,
   ) {
-    this.files = document.getMap<Y.Text>("files");
+    this.files = document.getMap<WorkspaceFile>("files");
     this.folders = document.getMap<boolean>("folders");
     this.files.observe(() => this.handleStructureChange());
     this.folders.observe(() => this.handleStructureChange());
@@ -81,6 +92,22 @@ export class RoomWorkspace {
     const tree = requiredElement("explorer-tree");
     tree.addEventListener("keydown", (event) => this.handleTreeKeyDown(event));
     tree.addEventListener("contextmenu", (event) => this.handleContextMenu(event));
+    const explorer = requiredElement("explorer-view");
+    explorer.addEventListener("dragstart", (event) => this.handleDragStart(event));
+    explorer.addEventListener("dragover", (event) => this.handleDragOver(event));
+    explorer.addEventListener("dragleave", (event) => {
+      if (!(event.relatedTarget instanceof Node) || !explorer.contains(event.relatedTarget)) {
+        this.clearDropTarget();
+      }
+    });
+    explorer.addEventListener("drop", (event) => {
+      void this.handleDrop(event);
+    });
+    explorer.addEventListener("dragend", () => {
+      this.draggedPaths = [];
+      this.clearDropTarget();
+      this.renderTree(this.focusedPath || undefined);
+    });
     requiredElement("explorer-menu").addEventListener("click", (event) => {
       const button = (event.target as Element).closest<HTMLButtonElement>("[data-command]");
       if (button === null || button.disabled) {
@@ -110,12 +137,13 @@ export class RoomWorkspace {
 
   destroy(): void {
     this.binding?.destroy();
+    this.setBinaryView();
     for (const model of monaco.editor.getModels()) {
       if (model.uri.path.startsWith(`${workspaceRoot}/`)) {
         model.dispose();
       }
     }
-    for (const registration of this.registeredFiles.values()) {
+    for (const { registration } of this.registeredFiles.values()) {
       registration.dispose();
     }
   }
@@ -127,7 +155,7 @@ export class RoomWorkspace {
     endLineNumber: number,
     endColumn: number,
   ): void {
-    if (!this.files.has(path)) {
+    if (!(this.files.get(path) instanceof Y.Text)) {
       return;
     }
     this.openFile(path, false);
@@ -141,7 +169,9 @@ export class RoomWorkspace {
     if (this.mutatingStructure) {
       return;
     }
-    if (this.activePath !== "" && !this.files.has(this.activePath)) {
+    const previousActivePath = this.activePath;
+    if (this.activePath !== "" && (!this.files.has(this.activePath)
+      || this.registeredFiles.get(this.activePath)?.content !== this.files.get(this.activePath))) {
       this.binding?.destroy();
       this.binding = undefined;
       this.editor.setModel(null);
@@ -150,7 +180,9 @@ export class RoomWorkspace {
     this.syncRegisteredFiles();
     this.pruneExplorerState();
     if (this.activePath === "") {
-      const nextPath = [...this.files.keys()].sort(comparePaths)[0];
+      const nextPath = this.files.has(previousActivePath)
+        ? previousActivePath
+        : [...this.files.keys()].sort(comparePaths)[0];
       if (nextPath === undefined) {
         this.clearEditor();
       } else {
@@ -162,20 +194,22 @@ export class RoomWorkspace {
   }
 
   private syncRegisteredFiles(): void {
-    for (const [path, registration] of this.registeredFiles) {
-      if (this.files.has(path)) {
+    for (const [path, { content, registration }] of this.registeredFiles) {
+      if (this.files.get(path) === content) {
         continue;
       }
       registration.dispose();
       this.registeredFiles.delete(path);
       monaco.editor.getModel(fileUri(path))?.dispose();
     }
-    for (const [path, text] of this.files) {
+    for (const [path, content] of this.files) {
       if (this.registeredFiles.has(path)) {
         continue;
       }
-      const file = new CollaborativeFile(fileUri(path), text);
-      this.registeredFiles.set(path, this.fileSystem.registerFile(file));
+      const file = content instanceof Y.Text
+        ? new CollaborativeFile(fileUri(path), content)
+        : new RegisteredReadOnlyFile(fileUri(path), async () => content.slice(), content.byteLength);
+      this.registeredFiles.set(path, { content, registration: this.fileSystem.registerFile(file) });
     }
   }
 
@@ -244,6 +278,7 @@ export class RoomWorkspace {
     if (this.pendingRename === entry.path) {
       this.renderRenameInput(row, entry);
     } else {
+      row.draggable = true;
       row.addEventListener("click", (event) => this.handleEntryClick(entry, event));
       row.addEventListener("dblclick", () => {
         if (entry.kind === "folder") {
@@ -328,22 +363,29 @@ export class RoomWorkspace {
   }
 
   private openFile(path: string, focusEditor = true): void {
-    const text = this.files.get(path);
-    if (!(text instanceof Y.Text)) {
+    const content = this.files.get(path);
+    if (content === undefined) {
       return;
     }
     if (path !== this.activePath) {
       this.binding?.destroy();
+      this.binding = undefined;
       this.activePath = path;
-      const uri = fileUri(path);
-      const language = languageForPath(path);
-      const model = monaco.editor.getModel(uri) ?? monaco.editor.createModel(
-        text.toString(),
-        language.id,
-        uri,
-      );
-      this.editor.setModel(model);
-      this.binding = new CollaborativeMonacoBinding(text, model, this.editor, this.awareness);
+      if (content instanceof Y.Text) {
+        this.setBinaryView();
+        const uri = fileUri(path);
+        const language = languageForPath(path);
+        const model = monaco.editor.getModel(uri) ?? monaco.editor.createModel(
+          content.toString(),
+          language.id,
+          uri,
+        );
+        this.editor.setModel(model);
+        this.binding = new CollaborativeMonacoBinding(content, model, this.editor, this.awareness);
+      } else {
+        this.editor.setModel(null);
+        this.setBinaryView(content);
+      }
       this.updateFileLabels(path);
     }
     if (!this.selectedPaths.has(path)) {
@@ -355,7 +397,32 @@ export class RoomWorkspace {
     this.selectedDirectory = parentPath(path);
     this.renderTree();
     if (focusEditor) {
-      this.editor.focus();
+      if (content instanceof Y.Text) {
+        this.editor.focus();
+      } else {
+        requiredElement("download-binary-file").focus();
+      }
+    }
+  }
+
+  private setBinaryView(content?: Uint8Array): void {
+    if (this.binaryUrl !== undefined) {
+      URL.revokeObjectURL(this.binaryUrl);
+      this.binaryUrl = undefined;
+    }
+    const binary = content !== undefined;
+    requiredElement("editor").hidden = binary;
+    requiredElement("binary-file-view").hidden = !binary;
+    for (const id of ["cursor-position", "indent-status", "encoding-status"]) {
+      requiredElement(id).hidden = binary;
+    }
+    const download = requiredElement("download-binary-file") as HTMLAnchorElement;
+    download.removeAttribute("href");
+    if (content !== undefined) {
+      this.binaryUrl = URL.createObjectURL(new Blob([new Uint8Array(content).buffer], { type: "application/octet-stream" }));
+      download.href = this.binaryUrl;
+      download.download = baseName(this.activePath);
+      requiredElement("binary-file-size").textContent = `${content.byteLength.toLocaleString()} bytes`;
     }
   }
 
@@ -366,7 +433,9 @@ export class RoomWorkspace {
     tabFileName.textContent = name;
     tabFileName.title = name;
     requiredElement("tab-file-icon").replaceWith(fileIcon(path, "tab-file-icon"));
-    requiredElement("language-status").textContent = languageForPath(path).label;
+    requiredElement("language-status").textContent = this.files.get(path) instanceof Uint8Array
+      ? "Binary"
+      : languageForPath(path).label;
 
     const breadcrumbs = requiredElement("breadcrumbs");
     breadcrumbs.replaceChildren();
@@ -386,6 +455,7 @@ export class RoomWorkspace {
     this.binding?.destroy();
     this.binding = undefined;
     this.editor.setModel(null);
+    this.setBinaryView();
     this.activePath = "";
     requiredElement("titlebar-label").textContent = "ABAP Collaborate";
     const tabFileName = requiredElement("tab-file-name");
@@ -661,6 +731,151 @@ export class RoomWorkspace {
     this.renderTree(this.focusedPath || undefined);
   }
 
+  private handleDragStart(event: DragEvent): void {
+    const row = (event.target as Element).closest<HTMLElement>(".file-row[draggable=true]");
+    if (row === null || event.dataTransfer === null || event.target instanceof HTMLInputElement) {
+      event.preventDefault();
+      return;
+    }
+    const path = row.dataset.path!;
+    if (!this.selectedPaths.has(path)) {
+      this.selectPath(path, false, false);
+    }
+    this.draggedPaths = this.topLevelSelection();
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData(explorerDragType, JSON.stringify(this.draggedPaths));
+    this.closeExplorerMenu();
+    for (const entry of requiredElement("explorer-tree").querySelectorAll<HTMLElement>("[data-path]")) {
+      const selected = this.selectedPaths.has(entry.dataset.path!);
+      entry.classList.toggle("selected", selected);
+      entry.setAttribute("aria-selected", String(selected));
+    }
+  }
+
+  private dropDirectory(event: DragEvent): string {
+    const row = (event.target as Element).closest<HTMLElement>(".file-row");
+    if (row === null) {
+      return "";
+    }
+    return row.dataset.kind === "folder" ? row.dataset.path! : parentPath(row.dataset.path!);
+  }
+
+  private canDropPaths(directory: string): boolean {
+    return this.draggedPaths.length > 0
+      && this.draggedPaths.every((path) => this.pathExists(path)
+        && !(this.folders.has(path) && isPathWithin(directory, path)))
+      && this.draggedPaths.some((path) => parentPath(path) !== directory);
+  }
+
+  private handleDragOver(event: DragEvent): void {
+    const transfer = event.dataTransfer;
+    if (transfer === null) {
+      return;
+    }
+    const localFiles = transfer.types.includes("Files");
+    if (!localFiles && !transfer.types.includes(explorerDragType)) {
+      return;
+    }
+    event.preventDefault();
+    this.clearDropTarget();
+    const directory = this.dropDirectory(event);
+    if (!localFiles && !this.canDropPaths(directory)) {
+      transfer.dropEffect = "none";
+      return;
+    }
+    transfer.dropEffect = localFiles ? "copy" : "move";
+    this.dropTarget = directory === ""
+      ? requiredElement("explorer-tree")
+      : requiredElement("explorer-tree").querySelector<HTMLElement>(`[data-path="${CSS.escape(directory)}"]`)!;
+    this.dropTarget.classList.add("drop-target");
+  }
+
+  private clearDropTarget(): void {
+    this.dropTarget?.classList.remove("drop-target");
+    this.dropTarget = undefined;
+  }
+
+  private async handleDrop(event: DragEvent): Promise<void> {
+    const transfer = event.dataTransfer;
+    if (transfer === null) {
+      return;
+    }
+    const localFiles = transfer.types.includes("Files");
+    if (!localFiles && !transfer.types.includes(explorerDragType)) {
+      return;
+    }
+    event.preventDefault();
+    const directory = this.dropDirectory(event);
+    this.clearDropTarget();
+    this.closeExplorerMenu();
+    if (localFiles) {
+      const items = [...transfer.items].filter((item) => item.kind === "file");
+      const entries = items.length === 0
+        ? [...transfer.files]
+        : items.map((item) => item.webkitGetAsEntry?.() ?? item.getAsFile()!);
+      await this.importLocalEntries(entries, directory);
+    } else if (this.canDropPaths(directory)) {
+      this.transferPaths(this.draggedPaths, directory, false);
+    }
+    this.draggedPaths = [];
+  }
+
+  private async importLocalEntries(entries: (File | FileSystemEntry)[], directory: string): Promise<void> {
+    let contents: LocalEntry[];
+    try {
+      contents = await Promise.all(entries.map(readLocalEntry));
+    } catch (error) {
+      window.alert((error as Error).message);
+      return;
+    }
+    if (contents.length === 0) {
+      return;
+    }
+    if (directory !== "" && !this.folders.has(directory)) {
+      window.alert("The destination folder no longer exists. Drop the files or folders again.");
+      return;
+    }
+    const occupied = new Set([...this.files.keys(), ...this.folders.keys()]);
+    const importedPaths: string[] = [];
+    const importEntry = (entry: LocalEntry, path: string): void => {
+      if (entry.kind === "file") {
+        this.files.set(path, typeof entry.content === "string" ? new Y.Text(entry.content) : entry.content);
+      } else {
+        this.folders.set(path, true);
+        for (const child of entry.children) {
+          importEntry(child, joinPath(path, child.name));
+        }
+      }
+    };
+    this.mutateStructure(() => {
+      for (const entry of contents) {
+        const path = uniqueCopyPath(directory, entry.name, occupied);
+        occupied.add(path);
+        importEntry(entry, path);
+        importedPaths.push(path);
+      }
+    });
+    this.syncRegisteredFiles();
+    this.selectedPaths.clear();
+    for (const path of importedPaths) {
+      this.selectedPaths.add(path);
+      if (this.folders.has(path)) {
+        this.expandedFolders.add(path);
+      }
+    }
+    this.selectionAnchor = importedPaths[0];
+    this.focusedPath = importedPaths[0];
+    this.selectedDirectory = this.folders.has(this.focusedPath) ? this.focusedPath : parentPath(this.focusedPath);
+    if (directory !== "") {
+      this.expandedFolders.add(directory);
+    }
+    if (this.files.has(this.focusedPath)) {
+      this.openFile(this.focusedPath, false);
+    } else {
+      this.renderTree(this.focusedPath);
+    }
+  }
+
   private pasteClipboard(): void {
     if (this.clipboard === undefined) {
       return;
@@ -671,14 +886,24 @@ export class RoomWorkspace {
       this.renderTree();
       return;
     }
-    const destinationDirectory = this.pasteDirectory();
+    const moving = this.clipboard.mode === "move";
+    if (!this.transferPaths(sources, this.pasteDirectory(), !moving)) {
+      return;
+    }
+    if (moving) {
+      this.clipboard = undefined;
+      this.renderTree(this.focusedPath || undefined);
+    }
+  }
+
+  private transferPaths(sources: string[], destinationDirectory: string, copy: boolean): boolean {
     const occupied = new Set([...this.files.keys(), ...this.folders.keys()]);
     const moves: { source: string; destination: string }[] = [];
     for (const source of sources) {
       if (this.folders.has(source) && (destinationDirectory === source || destinationDirectory.startsWith(`${source}/`))) {
         continue;
       }
-      if (this.clipboard.mode === "move" && parentPath(source) === destinationDirectory) {
+      if (!copy && parentPath(source) === destinationDirectory) {
         continue;
       }
       const destination = uniqueCopyPath(destinationDirectory, baseName(source), occupied);
@@ -686,13 +911,13 @@ export class RoomWorkspace {
       moves.push({ source, destination });
     }
     if (moves.length === 0) {
-      return;
+      return false;
     }
-    const moving = this.clipboard.mode === "move";
-    this.relocatePaths(moves, !moving);
-    if (moving) {
-      this.clipboard = undefined;
+    if (destinationDirectory !== "") {
+      this.expandedFolders.add(destinationDirectory);
     }
+    this.relocatePaths(moves, copy);
+    return true;
   }
 
   private relocatePaths(moves: { source: string; destination: string }[], copy: boolean): void {
@@ -710,7 +935,7 @@ export class RoomWorkspace {
     this.mutateStructure(() => {
       for (const { source, destination } of moves) {
         if (this.files.has(source)) {
-          this.files.set(destination, new Y.Text(this.files.get(source)!.toString()));
+          this.files.set(destination, cloneFile(this.files.get(source)!));
           if (!copy) {
             this.files.delete(source);
           }
@@ -724,7 +949,7 @@ export class RoomWorkspace {
         for (const path of nestedFiles) {
           this.files.set(
             replacePathPrefix(path, source, destination),
-            new Y.Text(this.files.get(path)!.toString()),
+            cloneFile(this.files.get(path)!),
           );
         }
         if (!copy) {
@@ -893,6 +1118,51 @@ class CollaborativeFile extends RegisteredFile {
       this.text.insert(0, value);
     });
   }
+}
+
+async function readLocalEntry(source: File | FileSystemEntry): Promise<LocalEntry> {
+  if (!validName(source.name)) {
+    throw new Error(`Invalid file or folder name: ${source.name}`);
+  }
+  if (!(source instanceof File) && source.isDirectory) {
+    const reader = (source as FileSystemDirectoryEntry).createReader();
+    const children: LocalEntry[] = [];
+    while (true) {
+      const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+        reader.readEntries(resolve, reject);
+      });
+      if (batch.length === 0) {
+        break;
+      }
+      children.push(...await Promise.all(batch.map(readLocalEntry)));
+    }
+    return { kind: "folder", name: source.name, children };
+  }
+  let content: Uint8Array;
+  try {
+    const file = source instanceof File
+      ? source
+      : await new Promise<File>((resolve, reject) => {
+        (source as FileSystemFileEntry).file(resolve, reject);
+      });
+    content = new Uint8Array(await file.arrayBuffer());
+  } catch {
+    throw new Error(`Could not read “${source.name}”.`);
+  }
+  let text: string;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(content);
+  } catch {
+    return { kind: "file", name: source.name, content };
+  }
+  if (/[\u0000-\u0008\u000e-\u001f]/.test(text)) {
+    return { kind: "file", name: source.name, content };
+  }
+  return { kind: "file", name: source.name, content: text };
+}
+
+function cloneFile(content: WorkspaceFile): WorkspaceFile {
+  return content instanceof Y.Text ? new Y.Text(content.toString()) : content.slice();
 }
 
 function fileUri(path: string): monaco.Uri {

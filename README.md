@@ -6,6 +6,16 @@ URL joins the same Yjs workspace and can see live participants, selections,
 files, folders, and edits. The Explorer creates and manages shared files and
 nested folders. Its action menu and common keyboard shortcuts support
 multi-selection, rename, copy, cut/move, paste, and recursive deletion.
+Drag local files or folders into the Explorer to upload them. Folder
+uploads preserve nested files and empty folders. Drag selected room files and
+folders to move them. Drop on a folder to use that folder, on a file
+to use its parent folder, or on the room heading or empty tree area to use the
+room root. Existing names are preserved by adding a “copy” suffix to new items.
+For a folder upload, the suffix applies to the top folder so its contents keep
+their original names and structure. UTF-8 text remains collaboratively editable.
+Binary files, including images, are preserved as raw bytes and can be downloaded
+from their file view. Search and replace only apply to text files. An unreadable
+file cancels the whole upload.
 Rooms created by the earlier single-file client are migrated to `report.abap`
 by either the Worker or the browser, so a frontend deployment does not require
 an exactly simultaneous Worker restart.
@@ -50,8 +60,8 @@ production. Room documents are stored in local Wrangler state while developing.
   snippets into the extension host.
 - `src/room-workspace.ts` owns the collaborative file tree, Explorer UI, Monaco
   models, and the active `y-monaco` binding.
-- Yjs maps store room file paths, folder paths, and one shared text type per
-  file.
+- Yjs maps store room file paths, folder paths, shared text for editable files,
+  and raw bytes for binary files.
 - `worker/index.js` routes room WebSockets to one Durable Object per room and
   persists each Yjs document in Durable Object storage.
 - Cloudflare's WebSocket Hibernation API keeps idle room connections open

@@ -217,6 +217,11 @@
           </div>
           <div id="breadcrumbs" class="breadcrumbs"><span>ABAP ROOM</span><span>›</span><span>report.abap</span></div>
           <div id="editor" class="editor" aria-label="Collaborative ABAP editor"></div>
+          <div id="binary-file-view" class="binary-file-view" hidden>
+            <p>This binary file cannot be edited as text.</p>
+            <p id="binary-file-size"></p>
+            <a id="download-binary-file" download>Download file</a>
+          </div>
         </section>
       </main>
 
@@ -225,8 +230,8 @@
         <span id="room-label">Room</span>
         <span class="status-spacer"></span>
         <span id="cursor-position">Ln 1, Col 1</span>
-        <span>Spaces: 2</span>
-        <span>UTF-8</span>
+        <span id="indent-status">Spaces: 2</span>
+        <span id="encoding-status">UTF-8</span>
         <span id="language-status">ABAP</span>
       </footer>
     </div>

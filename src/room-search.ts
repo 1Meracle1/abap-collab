@@ -1,6 +1,6 @@
 import * as Y from "yjs";
 
-import type { RoomWorkspace } from "./room-workspace";
+import type { RoomWorkspace, WorkspaceFile } from "./room-workspace";
 
 interface SearchMatch {
   path: string;
@@ -24,14 +24,14 @@ interface SearchOptions {
 }
 
 export class RoomSearch {
-  private readonly files: Y.Map<Y.Text>;
+  private readonly files: Y.Map<WorkspaceFile>;
   private readonly expandedFiles = new Set<string>();
   private matches: SearchMatch[] = [];
   private refreshTimer: number | undefined;
   private readonly handleFilesChanged = (): void => this.scheduleRefresh();
 
   constructor(document: Y.Doc, private readonly workspace: RoomWorkspace) {
-    this.files = document.getMap<Y.Text>("files");
+    this.files = document.getMap<WorkspaceFile>("files");
     this.files.observeDeep(this.handleFilesChanged);
 
     const searchInput = requiredInput("search-input");
@@ -118,6 +118,7 @@ export class RoomSearch {
       const expression = createSearchExpression(query, this.options());
       this.matches = [];
       for (const [path, text] of [...this.files.entries()].sort(([left], [right]) => left.localeCompare(right))) {
+        if (!(text instanceof Y.Text)) continue;
         if (!pathMatchesFilters(path, this.options().include, this.options().exclude)) continue;
         this.matches.push(...findMatches(path, text.toString(), expression));
       }

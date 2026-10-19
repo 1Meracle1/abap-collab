@@ -427,7 +427,8 @@ body.explorer-resizing * {
 }
 
 .explorer-tree {
-  min-height: 23px;
+  min-height: 69px;
+  padding-bottom: 23px;
   outline: none;
 }
 
@@ -465,6 +466,13 @@ body.explorer-resizing * {
 
 .file-row.cut {
   opacity: 0.55;
+}
+
+.explorer-tree.drop-target,
+.file-row.drop-target {
+  background: var(--selected-background);
+  outline: 1px solid var(--focus-border);
+  outline-offset: -1px;
 }
 
 .file-row-label {
@@ -671,6 +679,15 @@ body.explorer-resizing * {
 .editor {
   min-width: 0;
   min-height: 0;
+}
+
+.binary-file-view {
+  padding: 24px;
+  overflow: auto;
+}
+
+.binary-file-view a {
+  color: var(--focus-border);
 }
 
 .statusbar {

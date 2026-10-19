@@ -9,7 +9,7 @@ import * as Y from "yjs";
 import { CollaborationRoom } from "../worker/index.js";
 import { createRelativeSelection } from "../src/selection-affinity.ts";
 
-test("synchronizes and restores ABAP edits through a durable room", async () => {
+test("synchronizes and restores text and binary files through a durable room", async () => {
   const storage = new MemoryStorage();
   const context = new FakeContext(storage);
   const room = new CollaborationRoom(context);
@@ -44,14 +44,17 @@ test("synchronizes and restores ABAP edits through a durable room", async () => 
     firstDocument.once("update", (nextUpdate) => {
       structureUpdate = nextUpdate;
     });
+    const binaryContent = Uint8Array.from({ length: 256 }, (_, index) => index);
     firstDocument.transact(() => {
       firstDocument.getMap("folders").set("includes", true);
       firstFiles.set("includes/helper.abap", new Y.Text("FORM helper.\nENDFORM.\n"));
+      firstFiles.set("includes/image.png", binaryContent);
     });
     await room.webSocketMessage(firstSocket, encodeSyncUpdate(structureUpdate));
     applySyncMessages(secondSocket, secondDocument);
     assert.equal(secondDocument.getMap("folders").get("includes"), true);
     assert.equal(secondFiles.get("includes/helper.abap")?.toString(), "FORM helper.\nENDFORM.\n");
+    assert.deepEqual(secondFiles.get("includes/image.png"), binaryContent);
 
     room.awareness.destroy();
     room.document.destroy();
@@ -69,6 +72,7 @@ test("synchronizes and restores ABAP edits through a durable room", async () => 
       assert.match(restoredCode, /WRITE \/ 'Persistent'\./);
       assert.equal(restoredDocument.getMap("folders").get("includes"), true);
       assert.equal(restoredFiles.get("includes/helper.abap")?.toString(), "FORM helper.\nENDFORM.\n");
+      assert.deepEqual(restoredFiles.get("includes/image.png"), binaryContent);
     } finally {
       restoredRoom.awareness.destroy();
       restoredRoom.document.destroy();
